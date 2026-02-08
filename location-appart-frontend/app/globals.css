@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* --- Styles pour le Calendrier de réservation --- */
+.react-datepicker-wrapper {
+  width: 100%; /* Le calendrier prend toute la largeur */
+}
+
+/* Les dates libres (Vert par défaut) */
+.react-datepicker__day {
+  background-color: #dcfce7; /* Vert clair */
+  color: #166534; /* Vert foncé */
+  font-weight: bold;
+  border-radius: 50%;
+}
+.react-datepicker__day:hover {
+  background-color: #22c55e !important; /* Vert vif au survol */
+  color: white;
+}
+
+/* --- Styles avancés du Calendrier --- */
+
+/* 1. Jour COMPLÈTEMENT réservé (Milieu de séjour) */
+.day-fully-booked {
+  background-color: #fee2e2 !important; /* Rouge clair */
+  color: #991b1b !important; /* Rouge foncé */
+  text-decoration: line-through;
+  pointer-events: none; /* Impossible de cliquer */
+  opacity: 0.6;
+}
+
+/* 2. Jour de DÉBUT de réservation (Arrivée de quelqu'un d'autre) */
+/* Demande : Mi vert en haut / Mi rouge en bas */
+/* Interprétation : Matin libre (Vert), Soir pris (Rouge) */
+.day-start-booked {
+  background: linear-gradient(to bottom right, #dcfce7 50%, #fee2e2 50%) !important;
+  color: #000 !important;
+  font-weight: bold;
+}
+
+/* 3. Jour de FIN de réservation (Départ de quelqu'un d'autre) */
+/* Demande : Mi rouge en haut / Mi vert en bas */
+/* Interprétation : Matin pris (Rouge), Soir libre (Vert) */
+.day-end-booked {
+  background: linear-gradient(to bottom right, #fee2e2 50%, #dcfce7 50%) !important;
+  color: #000 !important;
+  font-weight: bold;
+}
+
+/* Ajustement pour que la date sélectionnée (Bleu) reste prioritaire */
+.react-datepicker__day--selected {
+  background: #2563eb !important; /* Bleu */
+  color: white !important;
+}
