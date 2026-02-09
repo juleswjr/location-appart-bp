@@ -15,7 +15,7 @@ export default function ApartmentCard({ apartment }) {
         />
         
         <div className="absolute top-2 right-2 bg-white px-2 py-1 rounded-md font-bold text-sm shadow z-10 pointer-events-none">
-          {apartment.price_per_night/100} € / semaine
+          à partir de {apartment.price_per_night/100} € / semaine
         </div>
       </div>
 
