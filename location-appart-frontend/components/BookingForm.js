@@ -80,59 +80,152 @@ export default function BookingForm({ apartment }) {
 
 
   // --- 2. CALCULATRICE (MODE DÉTECTIVE) ---
-  useEffect(() => {
-    if (!startDate || !endDate) { setTotalPrice(0); return; }
+useEffect(() => {
+  if (!startDate || !endDate) { setTotalPrice(0); return; }
 
-    setIsCalculating(true);
+  setIsCalculating(true);
+  
+  const calculateTotal = async () => { // ⚠️ IMPORTANT: async ajouté
+    console.group('🔍 ========== DEBUG COMPLET SEASONAL PRICES ==========');
     
-    const calculateTotal = () => {
-      let total = 0;
-      let current = new Date(startDate); 
-      const end = new Date(endDate);
-
-      console.log("🤠 --- DÉBUT DE L'ENQUÊTE ---");
-      
-      // On affiche toutes les dates dispos dans la boîte pour comparer visuellement
-      const datesDisponibles = seasonalPrices.map(p => `${p.start_date.substring(0, 10)} (${p.price}€)`);
-      console.log("📜 LISTE DES PRIX EN MÉMOIRE :", datesDisponibles);
-
-      while (current < end) {
-        const dateKey = format(current, 'yyyy-MM-dd');
-        console.log(`🔎 Je cherche : [${dateKey}]`);
-
-        const weeklyPriceFound = seasonalPrices.find(p => {
-            // Nettoyage de la date BDD (on garde les 10 premiers caractères)
-            return p.start_date.substring(0, 10) === dateKey;
-        });
-
-        if (weeklyPriceFound) {
-          console.log(`✅ TROUVÉ ! Prix: ${weeklyPriceFound.price}€`);
-          total += parseFloat(weeklyPriceFound.price);
-        } else {
-          const defaultPrice = parseFloat(apartment.price_per_night) / 100;
-          console.log(`❌ NON TROUVÉ. (Est-ce que ${dateKey} est dans la liste ci-dessus ? NON).`);
-          console.log(`➡️ J'applique le défaut : ${defaultPrice}€`);
-          total += defaultPrice;
+    // ==================== ÉTAPE 1: VÉRIF APARTMENT ====================
+    console.log('📦 1️⃣ APARTMENT REÇU:');
+    console.log('   - ID:', apartment.id);
+    console.log('   - Type:', typeof apartment.id);
+    console.log('   - Longueur:', apartment.id?.length);
+    console.log('   - Valeur JSON:', JSON.stringify(apartment.id));
+    console.log('   - Prix par défaut:', apartment.price_per_night);
+    
+    // ==================== ÉTAPE 2: VÉRIF SEASONAL PRICES EN MÉMOIRE ====================
+    console.log('\n📊 2️⃣ SEASONAL PRICES EN MÉMOIRE (state):');
+    console.log('   - Nombre de lignes:', seasonalPrices.length);
+    console.log('   - Contenu complet:', seasonalPrices);
+    
+    if (seasonalPrices.length > 0) {
+      console.log('   - Premier élément:', seasonalPrices[0]);
+      console.log('   - Type de start_date:', typeof seasonalPrices[0].start_date);
+      console.log('   - Exemple start_date:', seasonalPrices[0].start_date);
+    }
+    
+    // ==================== ÉTAPE 3: REQUÊTE DIRECTE SUPABASE ====================
+    console.log('\n🔌 3️⃣ REQUÊTE DIRECTE À SUPABASE:');
+    
+    const { data: allPrices, error: allError } = await supabase
+      .from('seasonal_prices')
+      .select('*');
+    
+    console.log('   - Toutes les lignes en BDD:', allPrices);
+    console.log('   - Erreur:', allError);
+    
+    if (allPrices && allPrices.length > 0) {
+      const uniqueApartmentIds = [...new Set(allPrices.map(p => p.apartment_id))];
+      console.log('   - apartment_id uniques en BDD:', uniqueApartmentIds);
+      console.log('   - Votre apartment.id est-il dans la liste? →', 
+        uniqueApartmentIds.includes(apartment.id) ? '✅ OUI' : '❌ NON');
+    }
+    
+    // ==================== ÉTAPE 4: REQUÊTE CIBLÉE ====================
+    console.log('\n🎯 4️⃣ REQUÊTE AVEC VOTRE apartment.id:');
+    
+    const { data: targetedPrices, error: targetedError } = await supabase
+      .from('seasonal_prices')
+      .select('*')
+      .eq('apartment_id', apartment.id);
+    
+    console.log('   - Résultats pour apartment.id:', targetedPrices);
+    console.log('   - Erreur:', targetedError);
+    console.log('   - Nombre de résultats:', targetedPrices?.length || 0);
+    
+    // ==================== ÉTAPE 5: COMPARAISON MANUELLE ====================
+    console.log('\n🔬 5️⃣ COMPARAISON MANUELLE DES UUIDs:');
+    
+    if (allPrices && allPrices.length > 0) {
+      allPrices.forEach((price, index) => {
+        const match = price.apartment_id === apartment.id;
+        const matchStrict = price.apartment_id === apartment.id;
+        const matchTrimmed = price.apartment_id?.trim() === apartment.id?.trim();
+        
+        console.log(`   [${index}] "${price.apartment_id}"`);
+        console.log(`       vs "${apartment.id}"`);
+        console.log(`       → Égalité stricte (===): ${matchStrict ? '✅' : '❌'}`);
+        console.log(`       → Après trim(): ${matchTrimmed ? '✅' : '❌'}`);
+        console.log(`       → Longueurs: ${price.apartment_id?.length} vs ${apartment.id?.length}`);
+        
+        // Comparaison caractère par caractère si proche
+        if (price.apartment_id?.length === apartment.id?.length && !matchStrict) {
+          for (let i = 0; i < apartment.id.length; i++) {
+            if (price.apartment_id[i] !== apartment.id[i]) {
+              console.log(`       → Différence à l'index ${i}: "${price.apartment_id[i]}" vs "${apartment.id[i]}"`);
+            }
+          }
         }
-        current = addDays(current, 7);
+      });
+    }
+    
+    // ==================== ÉTAPE 6: VÉRIF RLS ====================
+    console.log('\n🔒 6️⃣ VÉRIFICATION RLS (Row Level Security):');
+    
+    const { data: publicTest, error: publicError } = await supabase
+      .from('seasonal_prices')
+      .select('count');
+    
+    console.log('   - Peut lire sans filtre?', publicTest ? '✅ OUI' : '❌ NON');
+    console.log('   - Erreur RLS?', publicError);
+    
+    // ==================== CALCUL NORMAL (avec logs améliorés) ====================
+    console.log('\n💰 7️⃣ CALCUL DU PRIX:');
+    
+    let total = 0;
+    let current = new Date(startDate); 
+    const end = new Date(endDate);
+
+    console.log(`   - Période: ${format(current, 'yyyy-MM-dd')} → ${format(end, 'yyyy-MM-dd')}`);
+    
+    const datesDisponibles = seasonalPrices.map(p => `${p.start_date.substring(0, 10)} (${p.price}€)`);
+    console.log('   - Prix saisonniers disponibles:', datesDisponibles);
+
+    while (current < end) {
+      const dateKey = format(current, 'yyyy-MM-dd');
+      console.log(`\n   🔎 Recherche pour: [${dateKey}]`);
+
+      const weeklyPriceFound = seasonalPrices.find(p => {
+        const dbDate = p.start_date.substring(0, 10);
+        const matches = dbDate === dateKey;
+        console.log(`      - Compare "${dbDate}" === "${dateKey}" → ${matches ? '✅' : '❌'}`);
+        return matches;
+      });
+
+      if (weeklyPriceFound) {
+        console.log(`   ✅ TROUVÉ ! Prix: ${weeklyPriceFound.price}€`);
+        total += parseFloat(weeklyPriceFound.price);
+      } else {
+        const defaultPrice = parseFloat(apartment.price_per_night) / 100;
+        console.log(`   ❌ NON TROUVÉ → Défaut: ${defaultPrice}€`);
+        total += defaultPrice;
       }
+      current = addDays(current, 7);
+    }
 
-      if (hasParking) {
-        const days = differenceInCalendarDays(endDate, startDate);
-        const weeks = Math.ceil(days / 7);
-        total += (weeks * 80);
-      }
+    if (hasParking) {
+      const days = differenceInCalendarDays(endDate, startDate);
+      const weeks = Math.ceil(days / 7);
+      const parkingCost = weeks * 80;
+      console.log(`\n   🅿️ Parking: ${weeks} semaines × 80€ = ${parkingCost}€`);
+      total += parkingCost;
+    }
 
-      console.log("💰 TOTAL FINAL :", Math.round(total));
-      setTotalPrice(Math.round(total));
-      setIsCalculating(false);
-      console.log("🤠 --- FIN DE L'ENQUÊTE ---");
-    };
+    console.log('\n💵 TOTAL FINAL:', Math.round(total), '€');
+    console.groupEnd();
+    
+    setTotalPrice(Math.round(total));
+    setIsCalculating(false);
+  };
 
-    const timer = setTimeout(calculateTotal, 200);
-    return () => clearTimeout(timer);
+  const timer = setTimeout(calculateTotal, 200);
+  return () => clearTimeout(timer);
 
-  }, [startDate, endDate, hasParking, seasonalPrices, apartment.price_per_night]);
+}, [startDate, endDate, hasParking, seasonalPrices, apartment.price_per_night, apartment.id]);
+// ⚠️ J'ai ajouté apartment.id aux dépendances
 
   // ... (Le reste du code ne change pas pour l'affichage) ...
   const getDayClass = (date) => {
