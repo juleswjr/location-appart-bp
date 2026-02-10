@@ -78,7 +78,30 @@ export default function BookingForm({ apartment }) {
     fetchData();
   }, [apartment.slug, apartment.id]);
 
+// ========== NOUVEAU useEffect POUR CHARGER LES PRIX ==========
+useEffect(() => {
+  const fetchSeasonalPrices = async () => {
+    if (!apartment?.id) return;
 
+    console.log('🔄 Chargement des prix saisonniers...');
+    
+    const { data, error } = await supabase
+      .from('seasonal_prices')
+      .select('start_date, price')
+      .eq('apartment_id', apartment.id)
+      .order('start_date', { ascending: true });
+
+    if (error) {
+      console.error('❌ Erreur lors du chargement:', error);
+      return;
+    }
+
+    console.log('✅ Prix chargés:', data);
+    setSeasonalPrices(data || []);
+  };
+
+  fetchSeasonalPrices();
+}, [apartment?.id]); // Se déclenche quand l'apartment change
   // --- 2. CALCULATRICE (MODE DÉTECTIVE) ---
 useEffect(() => {
   if (!startDate || !endDate) { setTotalPrice(0); return; }
