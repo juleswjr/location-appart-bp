@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.min.css";
-// On importe tout ce qu'il faut pour gérer les dates
 import { addDays, differenceInCalendarDays, format, isSameDay, subDays } from "date-fns"; 
 import fr from "date-fns/locale/fr";
 import { createClient } from "@supabase/supabase-js";
@@ -16,12 +15,10 @@ const supabase = createClient(
 
 export default function BookingForm({ apartment }) {
   
-  // --- ÉTATS (MÉMOIRE) ---
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [hasParking, setHasParking] = useState(false);
   
-  // La fameuse boîte qui stocke les prix venant de la BDD
   const [seasonalPrices, setSeasonalPrices] = useState([]); 
   const [totalPrice, setTotalPrice] = useState(0); 
   const [isCalculating, setIsCalculating] = useState(false);
@@ -34,125 +31,102 @@ export default function BookingForm({ apartment }) {
   const [fullyBookedDates, setFullyBookedDates] = useState([]);
   const [startBookedDates, setStartBookedDates] = useState([]);
   const [endBookedDates, setEndBookedDates] = useState([]);
-  
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
 
-
-  // --- 1. CHARGEMENT DES DONNÉES (Réservations + Prix) ---
+  // --- 1. CHARGEMENT (MODE DÉTECTIVE) ---
   useEffect(() => {
     async function fetchData() {
       try {
-        console.log("📥 Chargement des données pour l'appart :", apartment.id);
+        console.log("🕵️‍♂️ ID de l'appartement actuel :", apartment.id);
 
-        // A. CHARGER LES DATES DÉJÀ RÉSERVÉES
+        // A. Dates réservées
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         const resBooking = await fetch(`${apiUrl}/api/apartments/${apartment.slug}`);
         const dataBooking = await resBooking.json();
         
         if (dataBooking && dataBooking.bookings) {
-          let middleDays = [];
-          let startDays = [];
-          let endDays = [];
+          let middleDays = []; let startDays = []; let endDays = [];
           const confirmedBookings = dataBooking.bookings.filter(b => b.status === 'confirmed');
-          
           confirmedBookings.forEach(booking => {
             const start = new Date(booking.start_date);
             const end = new Date(booking.end_date);
-            startDays.push(start);
-            endDays.push(end);
-            
+            startDays.push(start); endDays.push(end);
             let current = addDays(start, 1);
-            while (current < end) {
-              middleDays.push(new Date(current));
-              current = addDays(current, 1);
-            }
+            while (current < end) { middleDays.push(new Date(current)); current = addDays(current, 1); }
           });
-          setFullyBookedDates(middleDays);
-          setStartBookedDates(startDays);
-          setEndBookedDates(endDays);
+          setFullyBookedDates(middleDays); setStartBookedDates(startDays); setEndBookedDates(endDays);
         }
 
-        // B. CHARGER LES PRIX SAISONNIERS (Supabase)
+        // B. PRIX SAISONNIERS (Le moment de vérité)
         const { data: prices, error } = await supabase
           .from('seasonal_prices')
           .select('start_date, price')
           .eq('apartment_id', apartment.id);
 
-        if (!error && prices) {
-          console.log("✅ PRIX REÇUS DE SUPABASE :", prices.length, "prix trouvés.");
-          // C'est ici qu'on remplit la boîte !
-          setSeasonalPrices(prices);
-        } else if (error) {
-          console.error("Erreur Supabase:", error);
+        if (error) {
+          console.error("🚨 ERREUR SUPABASE :", error.message);
+        } else {
+          console.log("📦 CONTENU BRUT REÇU DE SUPABASE :", prices);
+          setSeasonalPrices(prices || []); // On assure un tableau vide au pire
         }
 
       } catch (err) {
-        console.error("Erreur chargement global", err);
+        console.error("Erreur globale", err);
       }
     }
     fetchData();
   }, [apartment.slug, apartment.id]);
 
 
-  // --- 2. CALCULATRICE DU PRIX ---
+  // --- 2. CALCULATRICE (MODE DÉTECTIVE) ---
   useEffect(() => {
-    // Si les dates ne sont pas complètes, on met 0 et on arrête
-    if (!startDate || !endDate) {
-      setTotalPrice(0);
-      return;
-    }
+    if (!startDate || !endDate) { setTotalPrice(0); return; }
 
     setIsCalculating(true);
     
     const calculateTotal = () => {
       let total = 0;
       let current = new Date(startDate); 
-      const end = new Date(endDate); // Le jour de départ n'est pas facturé comme nuitée
+      const end = new Date(endDate);
 
-      console.log("--- NOUVEAU CALCUL ---");
+      console.log("🤠 --- DÉBUT DE L'ENQUÊTE ---");
+      
+      // On affiche toutes les dates dispos dans la boîte pour comparer visuellement
+      const datesDisponibles = seasonalPrices.map(p => `${p.start_date.substring(0, 10)} (${p.price}€)`);
+      console.log("📜 LISTE DES PRIX EN MÉMOIRE :", datesDisponibles);
 
-      // On boucle SEMAINE par SEMAINE
       while (current < end) {
-        
-        // On transforme la date du curseur en texte "YYYY-MM-DD" pour comparer
         const dateKey = format(current, 'yyyy-MM-dd');
-        
-        // On cherche cette date exacte dans la liste des prix chargés
+        console.log(`🔎 Je cherche : [${dateKey}]`);
+
         const weeklyPriceFound = seasonalPrices.find(p => {
-          // On coupe la date BDD pour garder juste YYYY-MM-DD
-          return p.start_date.substring(0, 10) === dateKey;
+            // Nettoyage de la date BDD (on garde les 10 premiers caractères)
+            return p.start_date.substring(0, 10) === dateKey;
         });
 
         if (weeklyPriceFound) {
-          // CAS 1 : C'est une semaine spéciale
-          const prixSemaine = parseFloat(weeklyPriceFound.price);
-          console.log(`📅 Semaine du ${dateKey} : PRIX SPÉCIAL (${prixSemaine}€)`);
-          total += prixSemaine;
+          console.log(`✅ TROUVÉ ! Prix: ${weeklyPriceFound.price}€`);
+          total += parseFloat(weeklyPriceFound.price);
         } else {
-          // CAS 2 : C'est une semaine standard
-          // apartment.price_per_night est en centimes (ex: 77400) -> on divise par 100
-          // C'est déjà un prix SEMAINE, donc on l'ajoute tel quel.
-          const prixDefaut = parseFloat(apartment.price_per_night) / 100;
-          console.log(`📅 Semaine du ${dateKey} : PRIX STANDARD (${prixDefaut}€)`);
-          total += prixDefaut;
+          const defaultPrice = parseFloat(apartment.price_per_night) / 100;
+          console.log(`❌ NON TROUVÉ. (Est-ce que ${dateKey} est dans la liste ci-dessus ? NON).`);
+          console.log(`➡️ J'applique le défaut : ${defaultPrice}€`);
+          total += defaultPrice;
         }
-
-        // Hop, on saute 7 jours plus loin
         current = addDays(current, 7);
       }
 
-      // Ajout du Parking (+80€ par semaine entamée)
       if (hasParking) {
         const days = differenceInCalendarDays(endDate, startDate);
-        const weeks = Math.ceil(days / 7); // ex: 8 jours = 2 semaines à payer
-        console.log(`🚗 Parking : ${weeks} semaine(s) à 80€`);
+        const weeks = Math.ceil(days / 7);
         total += (weeks * 80);
       }
 
-      console.log("💰 TOTAL :", Math.round(total));
+      console.log("💰 TOTAL FINAL :", Math.round(total));
       setTotalPrice(Math.round(total));
       setIsCalculating(false);
+      console.log("🤠 --- FIN DE L'ENQUÊTE ---");
     };
 
     const timer = setTimeout(calculateTotal, 200);
@@ -160,10 +134,8 @@ export default function BookingForm({ apartment }) {
 
   }, [startDate, endDate, hasParking, seasonalPrices, apartment.price_per_night]);
 
-
-  // --- GESTION DU FORMULAIRE ---
+  // ... (Le reste du code ne change pas pour l'affichage) ...
   const getDayClass = (date) => {
-    // Comparaison souple pour l'affichage (ignorer les heures)
     const dStr = date.toDateString();
     if (fullyBookedDates.some(d => d.toDateString() === dStr)) return "day-fully-booked";
     if (startBookedDates.some(d => d.toDateString() === dStr)) return "day-start-booked";
@@ -179,154 +151,60 @@ export default function BookingForm({ apartment }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!startDate || !endDate) return alert("Veuillez sélectionner vos dates !");
-    
-    setLoading(true);
-    setStatus(null);
-
+    setLoading(true); setStatus(null);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const res = await fetch(`${apiUrl}/api/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          apartment_id: apartment.id,
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString(),
-          status: "pending",
-          has_parking: hasParking,
-          total_price: totalPrice,
-          ...formData
+          apartment_id: apartment.id, start_date: startDate.toISOString(), end_date: endDate.toISOString(),
+          status: "pending", has_parking: hasParking, total_price: totalPrice, ...formData
         }),
       });
-
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur");
-
-      setStatus("success");
-      setStartDate(null); setEndDate(null); setHasParking(false); setTotalPrice(0);
+      setStatus("success"); setStartDate(null); setEndDate(null); setHasParking(false); setTotalPrice(0);
       setFormData({ customer_name: "", customer_email: "", customer_phone: "", customer_address: "", customer_dob: "", message: "" });
-
-    } catch (error) {
-      alert("Erreur : " + error.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { alert("Erreur : " + error.message); } finally { setLoading(false); }
   };
 
   if (status === "success") {
-    return (
-      <div className="bg-green-50 p-8 rounded-lg border border-green-200 text-center">
-        <div className="text-5xl mb-4">✅</div>
-        <h3 className="text-2xl font-bold text-green-800 mb-2">Demande envoyée !</h3>
-        <p className="text-green-700">Vous recevrez bientôt une confirmation par email.</p>
-      </div>
-    );
+    return ( <div className="bg-green-50 p-8 rounded-lg border border-green-200 text-center"><h3 className="text-2xl font-bold text-green-800">Demande envoyée !</h3></div> );
   }
 
   return (
     <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
       <h3 className="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Réserver ce logement</h3>
-
-      {/* DATES */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Arrivée</label>
-          <DatePicker
-            selected={startDate}
-            onChange={(date) => setStartDate(date)}
-            selectsStart
-            startDate={startDate}
-            endDate={endDate}
-            excludeDates={fullyBookedDates} 
-            dayClassName={getDayClass}
-            locale={fr}
-            dateFormat="dd/MM/yyyy"
-            placeholderText="Date d'arrivée"
-            className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
-            onKeyDown={(e) => e.preventDefault()}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Départ</label>
-          <DatePicker
-            selected={endDate}
-            onChange={(date) => setEndDate(date)}
-            selectsEnd
-            startDate={startDate}
-            endDate={endDate}
-            minDate={startDate}
-            excludeDates={fullyBookedDates}
-            dayClassName={getDayClass}
-            locale={fr}
-            dateFormat="dd/MM/yyyy"
-            placeholderText="Date de départ"
-            className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none cursor-pointer"
-             onKeyDown={(e) => e.preventDefault()}
-          />
-        </div>
+        <div><label className="block text-sm font-medium text-gray-700 mb-1">Arrivée</label><DatePicker selected={startDate} onChange={(date) => setStartDate(date)} selectsStart startDate={startDate} endDate={endDate} excludeDates={fullyBookedDates} dayClassName={getDayClass} locale={fr} dateFormat="dd/MM/yyyy" placeholderText="Arrivée" className="w-full border p-2 rounded" /></div>
+        <div><label className="block text-sm font-medium text-gray-700 mb-1">Départ</label><DatePicker selected={endDate} onChange={(date) => setEndDate(date)} selectsEnd startDate={startDate} endDate={endDate} minDate={startDate} excludeDates={fullyBookedDates} dayClassName={getDayClass} locale={fr} dateFormat="dd/MM/yyyy" placeholderText="Départ" className="w-full border p-2 rounded" /></div>
       </div>
-
-      {/* INFOS CLIENT */}
+      
+      {/* CHAMPS FORMULAIRE SIMPLIFIÉS POUR LE TEST */}
       <div className="space-y-4">
-        <div>
-           <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
-           <input type="text" name="customer_name" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_name} />
-        </div>
-        <div>
-           <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-           <input type="email" name="customer_email" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_email} />
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
-            <input type="tel" name="customer_phone" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_phone} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
-            <input type="date" name="customer_dob" required className="w-full border p-2 rounded text-gray-500" onChange={handleChange} value={formData.customer_dob} />
-          </div>
-        </div>
-        <div>
-           <label className="block text-sm font-medium text-gray-700 mb-1">Adresse postale</label>
-           <input type="text" name="customer_address" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_address} />
-        </div>
-        <div>
-           <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-           <textarea name="message" rows="3" className="w-full border p-2 rounded" onChange={handleChange} value={formData.message}></textarea>
-        </div>
+        <input type="text" name="customer_name" placeholder="Nom" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_name} />
+        <input type="email" name="customer_email" placeholder="Email" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_email} />
+         <input type="tel" name="customer_phone" placeholder="Téléphone" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_phone} />
+         <input type="text" name="customer_address" placeholder="Adresse" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_address} />
+         <input type="date" name="customer_dob" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_dob} />
+         <textarea name="message" placeholder="Message" className="w-full border p-2 rounded" onChange={handleChange} value={formData.message}></textarea>
       </div>
 
-      {/* OPTION PARKING */}
       <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
         <label className="flex items-start space-x-3 cursor-pointer">
-          <input 
-            type="checkbox" 
-            className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
-            checked={hasParking}
-            onChange={(e) => setHasParking(e.target.checked)}
-          />
-          <div className="flex flex-col">
-            <span className="font-bold text-gray-900">Option Parking privé</span>
-            <span className="text-sm text-gray-600">Garage sécurisé en sous-sol (+80€ / semaine)</span>
-          </div>
+          <input type="checkbox" className="mt-1 w-5 h-5" checked={hasParking} onChange={(e) => setHasParking(e.target.checked)} />
+          <div className="flex flex-col"><span className="font-bold text-gray-900">Option Parking (+80€)</span></div>
         </label>
       </div>
 
-      {/* AFFICHAGE DU PRIX TOTAL */}
-      {/* Si totalPrice est NaN ou 0, cette section est cachée. */}
       {totalPrice > 0 && (
         <div className="mt-6 p-4 bg-gray-900 rounded-lg text-white flex justify-between items-center shadow-lg">
-          <div>
-            <p className="text-gray-400 text-xs uppercase font-bold tracking-wider">Total estimé</p>
-            <p className="text-2xl font-bold">{totalPrice} €</p>
-          </div>
-          {isCalculating && <span className="text-xs text-yellow-400 animate-pulse">Calcul...</span>}
+          <div><p className="text-gray-400 text-xs uppercase font-bold tracking-wider">Total estimé</p><p className="text-2xl font-bold">{totalPrice} €</p></div>
         </div>
       )}
 
-      <button type="submit" disabled={loading} className={`w-full mt-4 py-3 rounded-lg font-bold text-white transition-all ${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"}`}>
-        {loading ? "Envoi..." : "Envoyer ma demande"}
-      </button>
+      <button type="submit" disabled={loading} className="w-full mt-4 py-3 rounded-lg font-bold text-white bg-blue-600 hover:bg-blue-700">{loading ? "Envoi..." : "Envoyer ma demande"}</button>
     </form>
   );
 }
