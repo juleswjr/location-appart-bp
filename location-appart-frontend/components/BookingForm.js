@@ -35,84 +35,60 @@ export default function BookingForm({ apartment }) {
   const [status, setStatus] = useState(null);
 
  // 2. CALCULATRICE AVEC DEBUG (Affiche les preuves dans la console F12)
+ // 1. CHARGEMENT (Réservations + Prix)
   useEffect(() => {
-    // Si pas de dates, on reset
-    if (!startDate || !endDate) {
-      setTotalPrice(0);
-      return;
-    }
-
-    setIsCalculating(true);
-    
-    const calculateTotal = () => {
-      let total = 0;
-      let current = new Date(startDate); 
-      const end = new Date(endDate);
-
-      console.log("🤠 --- DÉBUT DE L'ENQUÊTE --- 🤠");
-      console.log("1. Liste des prix chargés depuis Supabase :", seasonalPrices);
-
-      // On boucle semaine par semaine
-      while (current < end) {
+    async function fetchData() {
+      try {
+        // A. Réservations existantes (via ton Backend)
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const resBooking = await fetch(`${apiUrl}/api/apartments/${apartment.slug}`);
+        const dataBooking = await resBooking.json();
         
-        // On formate la date sélectionnée (Calendrier)
-        // On force le format YYYY-MM-DD pour ignorer l'heure
-        const currentDateString = format(current, 'yyyy-MM-dd');
-        
-        console.log(`🔎 Je cherche un prix pour la semaine du : [${currentDateString}]`);
-
-        // On cherche dans le tableau
-        const weeklyPriceFound = seasonalPrices.find(p => {
-            // On nettoie aussi la date venant de Supabase (on garde juste les 10 premiers caractères)
-            // Ex: "2026-12-19T00:00:00" devient "2026-12-19"
-            const dbDateClean = p.start_date.substring(0, 10);
-            
-            // On compare les deux chaînes propres
-            const estPareil = dbDateClean === currentDateString;
-            
-            // Ce log va te montrer CHAQUE comparaison
-            // console.log(`   Comparaison : DB[${dbDateClean}] vs CAL[${currentDateString}] = ${estPareil}`);
-            
-            return estPareil;
-        });
-
-        if (weeklyPriceFound) {
-          console.log(`✅ TROUVÉ ! Prix: ${weeklyPriceFound.price}€`);
-          total += parseFloat(weeklyPriceFound.price);
-        } else {
-          // Si on ne trouve pas, on utilise le prix par défaut
-          // ATTENTION : Si ton bookingController attend un prix TOTAL, assure-toi que price_per_night est bien géré
-          // Ici, on part du principe que price_per_night = PRIX SEMAINE EN CENTIMES
-          const defaultPriceEuros = parseFloat(apartment.price_per_night) / 100;
+        if (dataBooking && dataBooking.bookings) {
+          let middleDays = [];
+          let startDays = [];
+          let endDays = [];
+          const confirmedBookings = dataBooking.bookings.filter(b => b.status === 'confirmed');
           
-          console.log(`❌ NON TROUVÉ. J'applique le défaut : ${defaultPriceEuros}€`);
-          console.log(`   (Raison probable : Tu as cliqué sur un jour qui n'est pas dans la liste des prix)`);
-          
-          total += defaultPriceEuros;
+          confirmedBookings.forEach(booking => {
+            const start = new Date(booking.start_date);
+            const end = new Date(booking.end_date);
+            startDays.push(start);
+            endDays.push(end);
+            
+            let current = addDays(start, 1);
+            while (current < end) {
+              middleDays.push(new Date(current));
+              current = addDays(current, 1);
+            }
+          });
+          setFullyBookedDates(middleDays);
+          setStartBookedDates(startDays);
+          setEndBookedDates(endDays);
         }
 
-        // On saute à la semaine suivante
-        current = addDays(current, 7);
+        // B. Prix Saisonniers (Direct Supabase)
+        // 1. On demande les infos
+        const { data: prices, error } = await supabase
+          .from('seasonal_prices')
+          .select('start_date, price')
+          .eq('apartment_id', apartment.id);
+
+        // 2. On vérifie et ON SAUVEGARDE
+        if (!error && prices) {
+          console.log("✅ PRIX REÇUS DE SUPABASE :", prices);
+          
+          // 👇 C'EST LA LIGNE QU'IL TE MANQUAIT !!! 👇
+          setSeasonalPrices(prices); 
+          // 👆 SANS ÇA, ÇA NE MARCHE PAS 👆
+        }
+
+      } catch (err) {
+        console.error("Erreur chargement", err);
       }
-
-      // Gestion du Parking
-      if (hasParking) {
-        const days = differenceInCalendarDays(endDate, startDate);
-        const weeks = Math.ceil(days / 7);
-        console.log(`🚗 Parking ajouté pour ${weeks} semaine(s) : +${weeks * 80}€`);
-        total += (weeks * 80);
-      }
-
-      console.log("💰 TOTAL FINAL CALCULÉ :", Math.round(total));
-      setTotalPrice(Math.round(total));
-      setIsCalculating(false);
-      console.log("🤠 --- FIN DE L'ENQUÊTE --- 🤠");
-    };
-
-    const timer = setTimeout(calculateTotal, 200);
-    return () => clearTimeout(timer);
-
-  }, [startDate, endDate, hasParking, seasonalPrices, apartment.price_per_night]); // ... (Reste du code inchangé : getDayClass, handleChange, handleSubmit, JSX) ...
+    }
+    fetchData();
+  }, [apartment.slug, apartment.id]); // ... (Reste du code inchangé : getDayClass, handleChange, handleSubmit, JSX) ...
   const getDayClass = (date) => {
     /* ... Code existant ... */
     // Je remets le code pour que tu puisses copier-coller tout le fichier sans trou
