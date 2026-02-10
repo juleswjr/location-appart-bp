@@ -1,16 +1,21 @@
-// src/components/BookingForm.js
 "use client";
 
 import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.min.css";
-// On ajoute 'addDays' et 'differenceInCalendarDays' pour gérer les sauts de semaine
-import { eachDayOfInterval, isSameDay, subDays, addDays, differenceInCalendarDays } from "date-fns"; 
+import { isSameDay, subDays, addDays, differenceInCalendarDays } from "date-fns"; 
 import fr from "date-fns/locale/fr";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+
+// 👇 CHANGEMENT ICI : On utilise le client standard, plus de "auth-helpers"
+import { createClient } from "@supabase/supabase-js";
+
+// On initialise Supabase avec tes clés publiques (accessibles côté client)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default function BookingForm({ apartment }) {
-  const supabase = createClientComponentClient();
   
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
@@ -32,10 +37,11 @@ export default function BookingForm({ apartment }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
 
-  // 1. CHARGEMENT
+  // 1. CHARGEMENT (Réservations + Prix)
   useEffect(() => {
     async function fetchData() {
       try {
+        // A. Réservations existantes (via ton Backend)
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         const resBooking = await fetch(`${apiUrl}/api/apartments/${apartment.slug}`);
         const dataBooking = await resBooking.json();
@@ -44,15 +50,20 @@ export default function BookingForm({ apartment }) {
           let middleDays = [];
           let startDays = [];
           let endDays = [];
+          // On filtre uniquement les confirmées pour bloquer le calendrier
           const confirmedBookings = dataBooking.bookings.filter(b => b.status === 'confirmed');
+          
           confirmedBookings.forEach(booking => {
             const start = new Date(booking.start_date);
             const end = new Date(booking.end_date);
             startDays.push(start);
             endDays.push(end);
-            if (end > addDays(start, 1)) {
-              const days = eachDayOfInterval({ start: addDays(start, 1), end: subDays(end, 1) });
-              middleDays = [...middleDays, ...days];
+            
+            // On remplit les jours entre le début et la fin
+            let current = addDays(start, 1);
+            while (current < end) {
+              middleDays.push(new Date(current));
+              current = addDays(current, 1);
             }
           });
           setFullyBookedDates(middleDays);
@@ -60,6 +71,7 @@ export default function BookingForm({ apartment }) {
           setEndBookedDates(endDays);
         }
 
+        // B. Prix Saisonniers (Direct Supabase sans auth-helper)
         const { data: prices, error } = await supabase
           .from('seasonal_prices')
           .select('start_date, price')
@@ -74,10 +86,10 @@ export default function BookingForm({ apartment }) {
       }
     }
     fetchData();
-  }, [apartment.slug, apartment.id, supabase]);
+  }, [apartment.slug, apartment.id]);
 
 
-  // 2. CALCULATRICE CORRIGÉE (Mode Semaine stricte)
+  // 2. CALCULATRICE PRIX (Logique Semaine par Semaine)
   useEffect(() => {
     if (!startDate || !endDate) {
       setTotalPrice(0);
@@ -88,32 +100,31 @@ export default function BookingForm({ apartment }) {
     
     const calculateTotal = () => {
       let total = 0;
-      let current = new Date(startDate); // On part du jour d'arrivée
-      const end = new Date(endDate); // Jour de départ
+      let current = new Date(startDate); 
+      const end = new Date(endDate);
 
-      // TANT QUE la date courante est avant la date de départ
+      // On boucle semaine par semaine
       while (current < end) {
         
-        // On cherche le PRIX SEMAINE correspondant exactement à cette date de début
-        // (ex: si current est le 19/12/2026, on cherche 19/12/2026 dans la BDD)
+        // On cherche si la date de début de cette semaine correspond à un prix spécial dans la BDD
         const weeklyPriceFound = seasonalPrices.find(p => isSameDay(new Date(p.start_date), current));
 
         if (weeklyPriceFound) {
-          // Bingo ! On ajoute le prix entier (920€)
+          // Si on trouve une promo pour cette date précise, on prend ce prix
           total += parseFloat(weeklyPriceFound.price);
         } else {
-          // Pas de prix spécial ? On met le prix par défaut x 7 nuits
+          // Sinon, on prend le prix par défaut x 7 (semaine standard)
           total += (parseFloat(apartment.price_per_night) * 7);
         }
 
-        // ⚠️ CRUCIAL : On saute directement à la semaine suivante (+7 jours)
-        // Comme ça on ne boucle pas jour par jour
+        // On saute à la semaine suivante (+7 jours)
         current = addDays(current, 7);
       }
 
       // Ajout du Parking (+80€ par semaine entamée)
       if (hasParking) {
         const days = differenceInCalendarDays(endDate, startDate);
+        // Math.ceil permet de compter une semaine entamée comme due (ex: 8 jours = 2 semaines de parking)
         const weeks = Math.ceil(days / 7);
         total += (weeks * 80);
       }
@@ -122,13 +133,14 @@ export default function BookingForm({ apartment }) {
       setIsCalculating(false);
     };
 
+    // Petit délai pour éviter de calculer pendant que l'utilisateur clique
     const timer = setTimeout(calculateTotal, 200);
     return () => clearTimeout(timer);
 
   }, [startDate, endDate, hasParking, seasonalPrices, apartment.price_per_night]);
 
 
-  // ... Le reste ne change pas ...
+  // --- Fonctions utilitaires ---
   const getDayClass = (date) => {
     if (fullyBookedDates.some(d => isSameDay(d, date))) return "day-fully-booked";
     if (startBookedDates.some(d => isSameDay(d, date))) return "day-start-booked";
@@ -277,7 +289,7 @@ export default function BookingForm({ apartment }) {
         </label>
       </div>
 
-      {/* AFFICHAGE DU PRIX TOTAL */}
+      {/* PRIX TOTAL */}
       {totalPrice > 0 && (
         <div className="mt-6 p-4 bg-gray-900 rounded-lg text-white flex justify-between items-center shadow-lg">
           <div>
