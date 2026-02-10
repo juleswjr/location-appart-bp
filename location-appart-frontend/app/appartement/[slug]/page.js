@@ -5,15 +5,14 @@ import {
   Check, Users, CalendarClock, 
   Ban, CigaretteOff, Cat, Accessibility 
 } from "lucide-react";
-
+export const dynamic = "force-dynamic";
 // Fonction pour récupérer l'appartement via l'API (Server Side)
 async function getApartment(slug) {
   try {
     // Si tu es en local, utilise localhost. En prod, il faudra changer l'URL de base.
     // L'idéal est d'utiliser une variable d'environnement : process.env.NEXT_PUBLIC_API_URL
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/apartments/${slug}`, {
-      cache: 'no-store'
-    });
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  const res = await fetch(`${apiUrl}/api/apartments/${slug}`, { cache: 'no-store' });
     
     if (!res.ok) return null;
     return res.json();

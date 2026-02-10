@@ -3,13 +3,15 @@ import LocationSection from '../components/LocationSection';
 import ContactSection from '../components/ContactSection';
 import Navbar from '../components/Navbar';
 import ReviewsSection from '../components/ReviewsSection';
+export const dynamic = "force-dynamic";
 async function getApartments() {
   try {
-    // On appelle ton backend sur le port 5000
-    const res = await fetch('http://localhost:5000/api/apartments', { 
-      cache: 'no-store' 
-    });
-
+    // On utilise la variable d'environnement OU localhost par défaut
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+  
+  // Utilise apiUrl dans ton fetch
+  const res = await fetch(`${apiUrl}/api/apartments`, { cache: 'no-store' });
+  
     if (!res.ok) {
       throw new Error('Erreur réseau');
     }
