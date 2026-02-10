@@ -12,7 +12,7 @@ export async function middleware(req) {
   // (Cela rafraîchit automatiquement la session si elle est vieille)
   const {
     data: { session },
-  } = await supabase.auth.getSession()
+  } = await supabase.auth.getSession() 
 
   // 4. LA SÉCURITÉ :
   // Si l'utilisateur essaie d'aller sur une page qui commence par "/admin"
