@@ -35,6 +35,7 @@ export default function BookingForm({ apartment }) {
   const [status, setStatus] = useState(null);
 
  // 2. CALCULATRICE CORRIGÉE ET BLINDÉE 🛡️
+  // 2. CALCULATRICE CORRIGÉE (Comparaison Chaîne de caractères) 🧵
   useEffect(() => {
     if (!startDate || !endDate) {
       setTotalPrice(0);
@@ -49,29 +50,40 @@ export default function BookingForm({ apartment }) {
       const end = new Date(endDate);
 
       console.log("--- DÉBUT DU CALCUL ---");
-      console.log("Prix saisonniers disponibles (Brut) :", seasonalPrices);
 
       // On boucle semaine par semaine
       while (current < end) {
         
-        console.log("Je cherche un prix pour la date du :", current.toISOString());
+        // 👇 LA CORRECTION MAGIQUE 👇
+        // 1. On transforme la date courante en texte "YYYY-MM-DD" (ex: "2026-12-19")
+        // Cela enlève toute notion d'heure ou de fuseau horaire.
+        const dateKey = format(current, 'yyyy-MM-dd');
+        
+        console.log("Je cherche le prix pour la semaine du :", dateKey);
 
-        // 👇 LA CORRECTION EST ICI 👇
-        // Au lieu de comparer des textes (fragile), on compare des objets Date (robuste)
-        const weeklyPriceFound = seasonalPrices.find(p => isSameDay(new Date(p.start_date), current));
+        const weeklyPriceFound = seasonalPrices.find(p => {
+          // 2. On s'assure que la date BDD est aussi au format "YYYY-MM-DD"
+          // (On prend juste les 10 premiers caractères pour virer l'heure si elle existe)
+          const dbDateKey = p.start_date.substring(0, 10);
+          return dbDateKey === dateKey;
+        });
 
         if (weeklyPriceFound) {
-          // CAS 1 : PRIX SPÉCIAL TROUVÉ
-          console.log(`✅ BINGO ! Prix spécial trouvé : ${weeklyPriceFound.price}€`);
+          // CAS 1 : PRIX SPÉCIAL
+          console.log(`✅ TROUVÉ ! Prix spécial : ${weeklyPriceFound.price}€`);
           total += parseFloat(weeklyPriceFound.price);
         } else {
-          // CAS 2 : PRIX PAR DÉFAUT
+          // CAS 2 : PRIX DÉFAUT
+          // Attention : price_per_night est en centimes dans ta BDD (ex: 77400)
+          // On divise par 100 pour avoir des euros (774€)
+          // On NE multiplie PAS par 7 car 77400 est déjà ton tarif semaine par défaut
           const defaultPriceEuros = parseFloat(apartment.price_per_night) / 100;
-          console.log(`❌ Pas de prix spécial. Prix défaut appliqué : ${defaultPriceEuros}€`);
+          
+          console.log(`❌ Pas de prix spécial. Prix défaut : ${defaultPriceEuros}€`);
           total += defaultPriceEuros;
         }
 
-        // On saute à la semaine suivante
+        // On saute à la semaine suivante (+7 jours)
         current = addDays(current, 7);
       }
 
