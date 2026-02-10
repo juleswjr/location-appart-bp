@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.min.css";
-// 👇 AJOUT DE 'format' pour comparer les dates proprement
-import { addDays, differenceInCalendarDays, format } from "date-fns"; 
+// On importe tout ce qu'il faut pour gérer les dates
+import { addDays, differenceInCalendarDays, format, isSameDay, subDays } from "date-fns"; 
 import fr from "date-fns/locale/fr";
 import { createClient } from "@supabase/supabase-js";
 
+// Initialisation de Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -15,10 +16,12 @@ const supabase = createClient(
 
 export default function BookingForm({ apartment }) {
   
+  // --- ÉTATS (MÉMOIRE) ---
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [hasParking, setHasParking] = useState(false);
   
+  // La fameuse boîte qui stocke les prix venant de la BDD
   const [seasonalPrices, setSeasonalPrices] = useState([]); 
   const [totalPrice, setTotalPrice] = useState(0); 
   const [isCalculating, setIsCalculating] = useState(false);
@@ -31,15 +34,18 @@ export default function BookingForm({ apartment }) {
   const [fullyBookedDates, setFullyBookedDates] = useState([]);
   const [startBookedDates, setStartBookedDates] = useState([]);
   const [endBookedDates, setEndBookedDates] = useState([]);
+  
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
 
- // 2. CALCULATRICE AVEC DEBUG (Affiche les preuves dans la console F12)
- // 1. CHARGEMENT (Réservations + Prix)
+
+  // --- 1. CHARGEMENT DES DONNÉES (Réservations + Prix) ---
   useEffect(() => {
     async function fetchData() {
       try {
-        // A. Réservations existantes (via ton Backend)
+        console.log("📥 Chargement des données pour l'appart :", apartment.id);
+
+        // A. CHARGER LES DATES DÉJÀ RÉSERVÉES
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         const resBooking = await fetch(`${apiUrl}/api/apartments/${apartment.slug}`);
         const dataBooking = await resBooking.json();
@@ -67,34 +73,101 @@ export default function BookingForm({ apartment }) {
           setEndBookedDates(endDays);
         }
 
-        // B. Prix Saisonniers (Direct Supabase)
-        // 1. On demande les infos
+        // B. CHARGER LES PRIX SAISONNIERS (Supabase)
         const { data: prices, error } = await supabase
           .from('seasonal_prices')
           .select('start_date, price')
           .eq('apartment_id', apartment.id);
 
-        // 2. On vérifie et ON SAUVEGARDE
         if (!error && prices) {
-          console.log("✅ PRIX REÇUS DE SUPABASE :", prices);
-          
-          // 👇 C'EST LA LIGNE QU'IL TE MANQUAIT !!! 👇
-          setSeasonalPrices(prices); 
-          // 👆 SANS ÇA, ÇA NE MARCHE PAS 👆
+          console.log("✅ PRIX REÇUS DE SUPABASE :", prices.length, "prix trouvés.");
+          // C'est ici qu'on remplit la boîte !
+          setSeasonalPrices(prices);
+        } else if (error) {
+          console.error("Erreur Supabase:", error);
         }
 
       } catch (err) {
-        console.error("Erreur chargement", err);
+        console.error("Erreur chargement global", err);
       }
     }
     fetchData();
-  }, [apartment.slug, apartment.id]); // ... (Reste du code inchangé : getDayClass, handleChange, handleSubmit, JSX) ...
+  }, [apartment.slug, apartment.id]);
+
+
+  // --- 2. CALCULATRICE DU PRIX ---
+  useEffect(() => {
+    // Si les dates ne sont pas complètes, on met 0 et on arrête
+    if (!startDate || !endDate) {
+      setTotalPrice(0);
+      return;
+    }
+
+    setIsCalculating(true);
+    
+    const calculateTotal = () => {
+      let total = 0;
+      let current = new Date(startDate); 
+      const end = new Date(endDate); // Le jour de départ n'est pas facturé comme nuitée
+
+      console.log("--- NOUVEAU CALCUL ---");
+
+      // On boucle SEMAINE par SEMAINE
+      while (current < end) {
+        
+        // On transforme la date du curseur en texte "YYYY-MM-DD" pour comparer
+        const dateKey = format(current, 'yyyy-MM-dd');
+        
+        // On cherche cette date exacte dans la liste des prix chargés
+        const weeklyPriceFound = seasonalPrices.find(p => {
+          // On coupe la date BDD pour garder juste YYYY-MM-DD
+          return p.start_date.substring(0, 10) === dateKey;
+        });
+
+        if (weeklyPriceFound) {
+          // CAS 1 : C'est une semaine spéciale
+          const prixSemaine = parseFloat(weeklyPriceFound.price);
+          console.log(`📅 Semaine du ${dateKey} : PRIX SPÉCIAL (${prixSemaine}€)`);
+          total += prixSemaine;
+        } else {
+          // CAS 2 : C'est une semaine standard
+          // apartment.price_per_night est en centimes (ex: 77400) -> on divise par 100
+          // C'est déjà un prix SEMAINE, donc on l'ajoute tel quel.
+          const prixDefaut = parseFloat(apartment.price_per_night) / 100;
+          console.log(`📅 Semaine du ${dateKey} : PRIX STANDARD (${prixDefaut}€)`);
+          total += prixDefaut;
+        }
+
+        // Hop, on saute 7 jours plus loin
+        current = addDays(current, 7);
+      }
+
+      // Ajout du Parking (+80€ par semaine entamée)
+      if (hasParking) {
+        const days = differenceInCalendarDays(endDate, startDate);
+        const weeks = Math.ceil(days / 7); // ex: 8 jours = 2 semaines à payer
+        console.log(`🚗 Parking : ${weeks} semaine(s) à 80€`);
+        total += (weeks * 80);
+      }
+
+      console.log("💰 TOTAL :", Math.round(total));
+      setTotalPrice(Math.round(total));
+      setIsCalculating(false);
+    };
+
+    const timer = setTimeout(calculateTotal, 200);
+    return () => clearTimeout(timer);
+
+  }, [startDate, endDate, hasParking, seasonalPrices, apartment.price_per_night]);
+
+
+  // --- GESTION DU FORMULAIRE ---
   const getDayClass = (date) => {
-    /* ... Code existant ... */
-    // Je remets le code pour que tu puisses copier-coller tout le fichier sans trou
-    if (fullyBookedDates.some(d => d.toDateString() === date.toDateString())) return "day-fully-booked";
-    if (startBookedDates.some(d => d.toDateString() === date.toDateString())) return "day-start-booked";
-    if (endBookedDates.some(d => d.toDateString() === date.toDateString())) return "day-end-booked";
+    // Comparaison souple pour l'affichage (ignorer les heures)
+    const dStr = date.toDateString();
+    if (fullyBookedDates.some(d => d.toDateString() === dStr)) return "day-fully-booked";
+    if (startBookedDates.some(d => d.toDateString() === dStr)) return "day-start-booked";
+    if (endBookedDates.some(d => d.toDateString() === dStr)) return "day-end-booked";
     return undefined;
   };
 
@@ -239,7 +312,8 @@ export default function BookingForm({ apartment }) {
         </label>
       </div>
 
-      {/* PRIX TOTAL */}
+      {/* AFFICHAGE DU PRIX TOTAL */}
+      {/* Si totalPrice est NaN ou 0, cette section est cachée. */}
       {totalPrice > 0 && (
         <div className="mt-6 p-4 bg-gray-900 rounded-lg text-white flex justify-between items-center shadow-lg">
           <div>
