@@ -1,9 +1,8 @@
-// src/components/BookingForm.js
 "use client";
 
 import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.min.css";// 👇 On a besoin de ces outils pour calculer les intervalles
+import "react-datepicker/dist/react-datepicker.min.css";
 import { eachDayOfInterval, isSameDay, subDays, addDays } from "date-fns"; 
 import fr from "date-fns/locale/fr";
 
@@ -11,23 +10,25 @@ export default function BookingForm({ apartment }) {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   
+  // 👇 1. NOUVEAU : On gère l'état du parking
+  const [hasParking, setHasParking] = useState(false);
+
   const [formData, setFormData] = useState({
     customer_name: "", customer_email: "", customer_phone: "",
     customer_address: "", customer_dob: "", message: ""
   });
 
-  // On sépare les types de dates pour le style
-  const [fullyBookedDates, setFullyBookedDates] = useState([]); // Milieu (Rouge)
-  const [startBookedDates, setStartBookedDates] = useState([]); // Début (Demi)
-  const [endBookedDates, setEndBookedDates] = useState([]);     // Fin (Demi)
-
+  const [fullyBookedDates, setFullyBookedDates] = useState([]);
+  const [startBookedDates, setStartBookedDates] = useState([]);
+  const [endBookedDates, setEndBookedDates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
 
   useEffect(() => {
     async function fetchBookings() {
       try {
-        const res = await fetch(`http://localhost:5000/api/apartments/${apartment.slug}`);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${apiUrl}/api/apartments/${apartment.slug}`);
         const data = await res.json();
         
         if (data && data.bookings) {
@@ -35,25 +36,18 @@ export default function BookingForm({ apartment }) {
           let startDays = [];
           let endDays = [];
           
-          // On ne prend que les CONFIRMÉES
           const confirmedBookings = data.bookings.filter(b => b.status === 'confirmed');
 
           confirmedBookings.forEach(booking => {
             const start = new Date(booking.start_date);
             const end = new Date(booking.end_date);
-
-            // 1. Ajouter le jour de début à la liste "Start"
             startDays.push(start);
-
-            // 2. Ajouter le jour de fin à la liste "End"
             endDays.push(end);
 
-            // 3. Calculer les jours du MILIEU (exclus start et end)
-            // S'il y a au moins 1 jour entre début et fin
             if (end > addDays(start, 1)) {
               const days = eachDayOfInterval({
-                start: addDays(start, 1), // Lendemain du début
-                end: subDays(end, 1)      // Veille de la fin
+                start: addDays(start, 1),
+                end: subDays(end, 1)
               });
               middleDays = [...middleDays, ...days];
             }
@@ -70,20 +64,10 @@ export default function BookingForm({ apartment }) {
     fetchBookings();
   }, [apartment.slug]);
 
-  // Fonction qui applique les CLASSES CSS selon le type de date
   const getDayClass = (date) => {
-    // Est-ce un jour du milieu ? (Rouge total)
-    if (fullyBookedDates.some(d => isSameDay(d, date))) {
-      return "day-fully-booked";
-    }
-    // Est-ce un jour de début ? (Vert/Rouge)
-    if (startBookedDates.some(d => isSameDay(d, date))) {
-      return "day-start-booked";
-    }
-    // Est-ce un jour de fin ? (Rouge/Vert)
-    if (endBookedDates.some(d => isSameDay(d, date))) {
-      return "day-end-booked";
-    }
+    if (fullyBookedDates.some(d => isSameDay(d, date))) return "day-fully-booked";
+    if (startBookedDates.some(d => isSameDay(d, date))) return "day-start-booked";
+    if (endBookedDates.some(d => isSameDay(d, date))) return "day-end-booked";
     return undefined;
   };
 
@@ -103,14 +87,19 @@ export default function BookingForm({ apartment }) {
     setStatus(null);
 
     try {
-      const res = await fetch("http://localhost:5000/api/bookings", {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const res = await fetch(`${apiUrl}/api/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           apartment_id: apartment.id,
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
-          status: "pending", 
+          status: "pending",
+          
+          // 👇 2. NOUVEAU : On envoie l'info au backend
+          has_parking: hasParking,
+          
           ...formData
         }),
       });
@@ -121,6 +110,7 @@ export default function BookingForm({ apartment }) {
       setStatus("success");
       setStartDate(null);
       setEndDate(null);
+      setHasParking(false); // Reset parking
       setFormData({ customer_name: "", customer_email: "", customer_phone: "", customer_address: "", customer_dob: "", message: "" });
 
     } catch (error) {
@@ -135,6 +125,7 @@ export default function BookingForm({ apartment }) {
       <div className="bg-green-50 p-8 rounded-lg border border-green-200 text-center">
         <div className="text-5xl mb-4">✅</div>
         <h3 className="text-2xl font-bold text-green-800 mb-2">Demande envoyée !</h3>
+        <p className="text-green-700">Vous recevrez bientôt une confirmation par email.</p>
       </div>
     );
   }
@@ -153,8 +144,6 @@ export default function BookingForm({ apartment }) {
             selectsStart
             startDate={startDate}
             endDate={endDate}
-            // ⚠️ IMPORTANT : On n'exclut QUE les jours du milieu.
-            // Les jours "mi-rouge/mi-vert" restent cliquables pour le chassé-croisé.
             excludeDates={fullyBookedDates} 
             dayClassName={getDayClass}
             locale={fr}
@@ -184,7 +173,7 @@ export default function BookingForm({ apartment }) {
         </div>
       </div>
 
-      {/* LE RESTE DU FORMULAIRE (Inchangé) */}
+      {/* INFOS CLIENT */}
       <div className="space-y-4">
         <div>
            <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label>
@@ -212,6 +201,22 @@ export default function BookingForm({ apartment }) {
            <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
            <textarea name="message" rows="3" className="w-full border p-2 rounded" onChange={handleChange} value={formData.message}></textarea>
         </div>
+      </div>
+
+      {/* 👇 3. NOUVEAU : LA CASE À COCHER PARKING */}
+      <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+        <label className="flex items-start space-x-3 cursor-pointer">
+          <input 
+            type="checkbox" 
+            className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+            checked={hasParking}
+            onChange={(e) => setHasParking(e.target.checked)}
+          />
+          <div className="flex flex-col">
+            <span className="font-bold text-gray-900">Option Parking privé</span>
+            <span className="text-sm text-gray-600">Garage sécurisé en sous-sol (+80€ / semaine)</span>
+          </div>
+        </label>
       </div>
 
       <button type="submit" disabled={loading} className={`w-full mt-6 py-3 rounded-lg font-bold text-white transition-all ${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"}`}>
