@@ -34,54 +34,7 @@ export default function BookingForm({ apartment }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
 
-  // 1. CHARGEMENT
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        const resBooking = await fetch(`${apiUrl}/api/apartments/${apartment.slug}`);
-        const dataBooking = await resBooking.json();
-        
-        if (dataBooking && dataBooking.bookings) {
-          let middleDays = [];
-          let startDays = [];
-          let endDays = [];
-          const confirmedBookings = dataBooking.bookings.filter(b => b.status === 'confirmed');
-          
-          confirmedBookings.forEach(booking => {
-            const start = new Date(booking.start_date);
-            const end = new Date(booking.end_date);
-            startDays.push(start);
-            endDays.push(end);
-            
-            let current = addDays(start, 1);
-            while (current < end) {
-              middleDays.push(new Date(current));
-              current = addDays(current, 1);
-            }
-          });
-          setFullyBookedDates(middleDays);
-          setStartBookedDates(startDays);
-          setEndBookedDates(endDays);
-        }
-
-        const { data: prices, error } = await supabase
-          .from('seasonal_prices')
-          .select('start_date, price')
-          .eq('apartment_id', apartment.id);
-
-        if (!error && prices) {
-          setSeasonalPrices(prices);
-        }
-      } catch (err) {
-        console.error("Erreur chargement", err);
-      }
-    }
-    fetchData();
-  }, [apartment.slug, apartment.id]);
-
-
-  // 2. CALCULATRICE CORRIGÉE 🛠️
+ // 2. CALCULATRICE CORRIGÉE ET BLINDÉE 🛡️
   useEffect(() => {
     if (!startDate || !endDate) {
       setTotalPrice(0);
@@ -95,27 +48,26 @@ export default function BookingForm({ apartment }) {
       let current = new Date(startDate); 
       const end = new Date(endDate);
 
+      console.log("--- DÉBUT DU CALCUL ---");
+      console.log("Prix saisonniers disponibles (Brut) :", seasonalPrices);
+
       // On boucle semaine par semaine
       while (current < end) {
         
-        // 1. On formate la date du calendrier en format 'YYYY-MM-DD' (comme dans la BDD)
-        // Cela évite les problèmes de fuseaux horaires ou d'heures
-        const currentDateString = format(current, 'yyyy-MM-dd');
+        console.log("Je cherche un prix pour la date du :", current.toISOString());
 
-        // 2. On cherche la correspondance exacte dans la liste des prix
-        const weeklyPriceFound = seasonalPrices.find(p => p.start_date === currentDateString);
+        // 👇 LA CORRECTION EST ICI 👇
+        // Au lieu de comparer des textes (fragile), on compare des objets Date (robuste)
+        const weeklyPriceFound = seasonalPrices.find(p => isSameDay(new Date(p.start_date), current));
 
         if (weeklyPriceFound) {
           // CAS 1 : PRIX SPÉCIAL TROUVÉ
-          // Il est déjà en Euros et c'est un prix SEMAINE. On l'ajoute tel quel.
-          console.log(`Prix spécial trouvé pour ${currentDateString}: ${weeklyPriceFound.price}€`);
+          console.log(`✅ BINGO ! Prix spécial trouvé : ${weeklyPriceFound.price}€`);
           total += parseFloat(weeklyPriceFound.price);
         } else {
           // CAS 2 : PRIX PAR DÉFAUT
-          // Le prix par défaut est en CENTIMES et c'est un prix SEMAINE.
-          // Donc on divise par 100 et ON NE MULTIPLIE PAS par 7.
           const defaultPriceEuros = parseFloat(apartment.price_per_night) / 100;
-          console.log(`Prix défaut appliqué pour ${currentDateString}: ${defaultPriceEuros}€`);
+          console.log(`❌ Pas de prix spécial. Prix défaut appliqué : ${defaultPriceEuros}€`);
           total += defaultPriceEuros;
         }
 
@@ -130,15 +82,15 @@ export default function BookingForm({ apartment }) {
         total += (weeks * 80);
       }
 
-      setTotalPrice(Math.round(total)); // On arrondit le total final
+      setTotalPrice(Math.round(total));
       setIsCalculating(false);
+      console.log("--- FIN DU CALCUL ---");
     };
 
     const timer = setTimeout(calculateTotal, 200);
     return () => clearTimeout(timer);
 
   }, [startDate, endDate, hasParking, seasonalPrices, apartment.price_per_night]);
-
   // ... (Reste du code inchangé : getDayClass, handleChange, handleSubmit, JSX) ...
   const getDayClass = (date) => {
     /* ... Code existant ... */
