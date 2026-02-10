@@ -1,17 +1,24 @@
+// src/components/BookingForm.js
 "use client";
 
 import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.min.css";
-import { eachDayOfInterval, isSameDay, subDays, addDays } from "date-fns"; 
+// On ajoute 'addDays' et 'differenceInCalendarDays' pour gérer les sauts de semaine
+import { eachDayOfInterval, isSameDay, subDays, addDays, differenceInCalendarDays } from "date-fns"; 
 import fr from "date-fns/locale/fr";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function BookingForm({ apartment }) {
+  const supabase = createClientComponentClient();
+  
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  
-  // 👇 1. NOUVEAU : On gère l'état du parking
   const [hasParking, setHasParking] = useState(false);
+  
+  const [seasonalPrices, setSeasonalPrices] = useState([]); 
+  const [totalPrice, setTotalPrice] = useState(0); 
+  const [isCalculating, setIsCalculating] = useState(false);
 
   const [formData, setFormData] = useState({
     customer_name: "", customer_email: "", customer_phone: "",
@@ -21,49 +28,107 @@ export default function BookingForm({ apartment }) {
   const [fullyBookedDates, setFullyBookedDates] = useState([]);
   const [startBookedDates, setStartBookedDates] = useState([]);
   const [endBookedDates, setEndBookedDates] = useState([]);
+  
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
 
+  // 1. CHARGEMENT
   useEffect(() => {
-    async function fetchBookings() {
+    async function fetchData() {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        const res = await fetch(`${apiUrl}/api/apartments/${apartment.slug}`);
-        const data = await res.json();
+        const resBooking = await fetch(`${apiUrl}/api/apartments/${apartment.slug}`);
+        const dataBooking = await resBooking.json();
         
-        if (data && data.bookings) {
+        if (dataBooking && dataBooking.bookings) {
           let middleDays = [];
           let startDays = [];
           let endDays = [];
-          
-          const confirmedBookings = data.bookings.filter(b => b.status === 'confirmed');
-
+          const confirmedBookings = dataBooking.bookings.filter(b => b.status === 'confirmed');
           confirmedBookings.forEach(booking => {
             const start = new Date(booking.start_date);
             const end = new Date(booking.end_date);
             startDays.push(start);
             endDays.push(end);
-
             if (end > addDays(start, 1)) {
-              const days = eachDayOfInterval({
-                start: addDays(start, 1),
-                end: subDays(end, 1)
-              });
+              const days = eachDayOfInterval({ start: addDays(start, 1), end: subDays(end, 1) });
               middleDays = [...middleDays, ...days];
             }
           });
-          
           setFullyBookedDates(middleDays);
           setStartBookedDates(startDays);
           setEndBookedDates(endDays);
         }
+
+        const { data: prices, error } = await supabase
+          .from('seasonal_prices')
+          .select('start_date, price')
+          .eq('apartment_id', apartment.id);
+
+        if (!error && prices) {
+          setSeasonalPrices(prices);
+        }
+
       } catch (err) {
-        console.error("Erreur chargement calendrier", err);
+        console.error("Erreur chargement", err);
       }
     }
-    fetchBookings();
-  }, [apartment.slug]);
+    fetchData();
+  }, [apartment.slug, apartment.id, supabase]);
 
+
+  // 2. CALCULATRICE CORRIGÉE (Mode Semaine stricte)
+  useEffect(() => {
+    if (!startDate || !endDate) {
+      setTotalPrice(0);
+      return;
+    }
+
+    setIsCalculating(true);
+    
+    const calculateTotal = () => {
+      let total = 0;
+      let current = new Date(startDate); // On part du jour d'arrivée
+      const end = new Date(endDate); // Jour de départ
+
+      // TANT QUE la date courante est avant la date de départ
+      while (current < end) {
+        
+        // On cherche le PRIX SEMAINE correspondant exactement à cette date de début
+        // (ex: si current est le 19/12/2026, on cherche 19/12/2026 dans la BDD)
+        const weeklyPriceFound = seasonalPrices.find(p => isSameDay(new Date(p.start_date), current));
+
+        if (weeklyPriceFound) {
+          // Bingo ! On ajoute le prix entier (920€)
+          total += parseFloat(weeklyPriceFound.price);
+        } else {
+          // Pas de prix spécial ? On met le prix par défaut x 7 nuits
+          total += (parseFloat(apartment.price_per_night) * 7);
+        }
+
+        // ⚠️ CRUCIAL : On saute directement à la semaine suivante (+7 jours)
+        // Comme ça on ne boucle pas jour par jour
+        current = addDays(current, 7);
+      }
+
+      // Ajout du Parking (+80€ par semaine entamée)
+      if (hasParking) {
+        const days = differenceInCalendarDays(endDate, startDate);
+        const weeks = Math.ceil(days / 7);
+        total += (weeks * 80);
+      }
+
+      setTotalPrice(total);
+      setIsCalculating(false);
+    };
+
+    const timer = setTimeout(calculateTotal, 200);
+    return () => clearTimeout(timer);
+
+  }, [startDate, endDate, hasParking, seasonalPrices, apartment.price_per_night]);
+
+
+  // ... Le reste ne change pas ...
   const getDayClass = (date) => {
     if (fullyBookedDates.some(d => isSameDay(d, date))) return "day-fully-booked";
     if (startBookedDates.some(d => isSameDay(d, date))) return "day-start-booked";
@@ -78,10 +143,7 @@ export default function BookingForm({ apartment }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!startDate || !endDate) {
-      alert("Veuillez sélectionner vos dates !");
-      return;
-    }
+    if (!startDate || !endDate) return alert("Veuillez sélectionner vos dates !");
     
     setLoading(true);
     setStatus(null);
@@ -96,10 +158,8 @@ export default function BookingForm({ apartment }) {
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),
           status: "pending",
-          
-          // 👇 2. NOUVEAU : On envoie l'info au backend
           has_parking: hasParking,
-          
+          total_price: totalPrice,
           ...formData
         }),
       });
@@ -108,9 +168,7 @@ export default function BookingForm({ apartment }) {
       if (!res.ok) throw new Error(data.message || "Erreur");
 
       setStatus("success");
-      setStartDate(null);
-      setEndDate(null);
-      setHasParking(false); // Reset parking
+      setStartDate(null); setEndDate(null); setHasParking(false); setTotalPrice(0);
       setFormData({ customer_name: "", customer_email: "", customer_phone: "", customer_address: "", customer_dob: "", message: "" });
 
     } catch (error) {
@@ -203,7 +261,7 @@ export default function BookingForm({ apartment }) {
         </div>
       </div>
 
-      {/* 👇 3. NOUVEAU : LA CASE À COCHER PARKING */}
+      {/* OPTION PARKING */}
       <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
         <label className="flex items-start space-x-3 cursor-pointer">
           <input 
@@ -219,7 +277,18 @@ export default function BookingForm({ apartment }) {
         </label>
       </div>
 
-      <button type="submit" disabled={loading} className={`w-full mt-6 py-3 rounded-lg font-bold text-white transition-all ${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"}`}>
+      {/* AFFICHAGE DU PRIX TOTAL */}
+      {totalPrice > 0 && (
+        <div className="mt-6 p-4 bg-gray-900 rounded-lg text-white flex justify-between items-center shadow-lg">
+          <div>
+            <p className="text-gray-400 text-xs uppercase font-bold tracking-wider">Total estimé</p>
+            <p className="text-2xl font-bold">{totalPrice} €</p>
+          </div>
+          {isCalculating && <span className="text-xs text-yellow-400 animate-pulse">Calcul...</span>}
+        </div>
+      )}
+
+      <button type="submit" disabled={loading} className={`w-full mt-4 py-3 rounded-lg font-bold text-white transition-all ${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"}`}>
         {loading ? "Envoi..." : "Envoyer ma demande"}
       </button>
     </form>
