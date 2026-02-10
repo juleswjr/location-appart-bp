@@ -34,9 +34,9 @@ export default function BookingForm({ apartment }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
 
- // 2. CALCULATRICE CORRIGÉE ET BLINDÉE 🛡️
-  // 2. CALCULATRICE CORRIGÉE (Comparaison Chaîne de caractères) 🧵
+ // 2. CALCULATRICE AVEC DEBUG (Affiche les preuves dans la console F12)
   useEffect(() => {
+    // Si pas de dates, on reset
     if (!startDate || !endDate) {
       setTotalPrice(0);
       return;
@@ -49,61 +49,70 @@ export default function BookingForm({ apartment }) {
       let current = new Date(startDate); 
       const end = new Date(endDate);
 
-      console.log("--- DÉBUT DU CALCUL ---");
+      console.log("🤠 --- DÉBUT DE L'ENQUÊTE --- 🤠");
+      console.log("1. Liste des prix chargés depuis Supabase :", seasonalPrices);
 
       // On boucle semaine par semaine
       while (current < end) {
         
-        // 👇 LA CORRECTION MAGIQUE 👇
-        // 1. On transforme la date courante en texte "YYYY-MM-DD" (ex: "2026-12-19")
-        // Cela enlève toute notion d'heure ou de fuseau horaire.
-        const dateKey = format(current, 'yyyy-MM-dd');
+        // On formate la date sélectionnée (Calendrier)
+        // On force le format YYYY-MM-DD pour ignorer l'heure
+        const currentDateString = format(current, 'yyyy-MM-dd');
         
-        console.log("Je cherche le prix pour la semaine du :", dateKey);
+        console.log(`🔎 Je cherche un prix pour la semaine du : [${currentDateString}]`);
 
+        // On cherche dans le tableau
         const weeklyPriceFound = seasonalPrices.find(p => {
-          // 2. On s'assure que la date BDD est aussi au format "YYYY-MM-DD"
-          // (On prend juste les 10 premiers caractères pour virer l'heure si elle existe)
-          const dbDateKey = p.start_date.substring(0, 10);
-          return dbDateKey === dateKey;
+            // On nettoie aussi la date venant de Supabase (on garde juste les 10 premiers caractères)
+            // Ex: "2026-12-19T00:00:00" devient "2026-12-19"
+            const dbDateClean = p.start_date.substring(0, 10);
+            
+            // On compare les deux chaînes propres
+            const estPareil = dbDateClean === currentDateString;
+            
+            // Ce log va te montrer CHAQUE comparaison
+            // console.log(`   Comparaison : DB[${dbDateClean}] vs CAL[${currentDateString}] = ${estPareil}`);
+            
+            return estPareil;
         });
 
         if (weeklyPriceFound) {
-          // CAS 1 : PRIX SPÉCIAL
-          console.log(`✅ TROUVÉ ! Prix spécial : ${weeklyPriceFound.price}€`);
+          console.log(`✅ TROUVÉ ! Prix: ${weeklyPriceFound.price}€`);
           total += parseFloat(weeklyPriceFound.price);
         } else {
-          // CAS 2 : PRIX DÉFAUT
-          // Attention : price_per_night est en centimes dans ta BDD (ex: 77400)
-          // On divise par 100 pour avoir des euros (774€)
-          // On NE multiplie PAS par 7 car 77400 est déjà ton tarif semaine par défaut
+          // Si on ne trouve pas, on utilise le prix par défaut
+          // ATTENTION : Si ton bookingController attend un prix TOTAL, assure-toi que price_per_night est bien géré
+          // Ici, on part du principe que price_per_night = PRIX SEMAINE EN CENTIMES
           const defaultPriceEuros = parseFloat(apartment.price_per_night) / 100;
           
-          console.log(`❌ Pas de prix spécial. Prix défaut : ${defaultPriceEuros}€`);
+          console.log(`❌ NON TROUVÉ. J'applique le défaut : ${defaultPriceEuros}€`);
+          console.log(`   (Raison probable : Tu as cliqué sur un jour qui n'est pas dans la liste des prix)`);
+          
           total += defaultPriceEuros;
         }
 
-        // On saute à la semaine suivante (+7 jours)
+        // On saute à la semaine suivante
         current = addDays(current, 7);
       }
 
-      // Ajout du Parking (+80€ par semaine entamée)
+      // Gestion du Parking
       if (hasParking) {
         const days = differenceInCalendarDays(endDate, startDate);
         const weeks = Math.ceil(days / 7);
+        console.log(`🚗 Parking ajouté pour ${weeks} semaine(s) : +${weeks * 80}€`);
         total += (weeks * 80);
       }
 
+      console.log("💰 TOTAL FINAL CALCULÉ :", Math.round(total));
       setTotalPrice(Math.round(total));
       setIsCalculating(false);
-      console.log("--- FIN DU CALCUL ---");
+      console.log("🤠 --- FIN DE L'ENQUÊTE --- 🤠");
     };
 
     const timer = setTimeout(calculateTotal, 200);
     return () => clearTimeout(timer);
 
-  }, [startDate, endDate, hasParking, seasonalPrices, apartment.price_per_night]);
-  // ... (Reste du code inchangé : getDayClass, handleChange, handleSubmit, JSX) ...
+  }, [startDate, endDate, hasParking, seasonalPrices, apartment.price_per_night]); // ... (Reste du code inchangé : getDayClass, handleChange, handleSubmit, JSX) ...
   const getDayClass = (date) => {
     /* ... Code existant ... */
     // Je remets le code pour que tu puisses copier-coller tout le fichier sans trou
