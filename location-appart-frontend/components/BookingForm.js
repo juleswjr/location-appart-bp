@@ -296,14 +296,14 @@ useEffect(() => {
         <div><label className="block text-sm font-medium text-gray-700 mb-1">Arrivée</label><DatePicker selected={startDate} onChange={(date) => setStartDate(date)} selectsStart startDate={startDate} endDate={endDate} excludeDates={fullyBookedDates} dayClassName={getDayClass} locale={fr} dateFormat="dd/MM/yyyy" placeholderText="Arrivée" className="w-full border p-2 rounded" /></div>
         <div><label className="block text-sm font-medium text-gray-700 mb-1">Départ</label><DatePicker selected={endDate} onChange={(date) => setEndDate(date)} selectsEnd startDate={startDate} endDate={endDate} minDate={startDate} excludeDates={fullyBookedDates} dayClassName={getDayClass} locale={fr} dateFormat="dd/MM/yyyy" placeholderText="Départ" className="w-full border p-2 rounded" /></div>
       </div>
-      
+      {/*<label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>*/}
       {/* CHAMPS FORMULAIRE SIMPLIFIÉS POUR LE TEST */}
       <div className="space-y-4">
         <input type="text" name="customer_name" placeholder="Nom" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_name} />
         <input type="email" name="customer_email" placeholder="Email" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_email} />
          <input type="tel" name="customer_phone" placeholder="Téléphone" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_phone} />
          <input type="text" name="customer_address" placeholder="Adresse" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_address} />
-         <label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label>
+         
          <input type="date" name="customer_dob" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_dob} />
          <textarea name="message" placeholder="Message" className="w-full border p-2 rounded" onChange={handleChange} value={formData.message}></textarea>
       </div>
