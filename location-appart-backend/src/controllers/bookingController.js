@@ -1,7 +1,7 @@
 // src/controllers/bookingController.js
 const supabase = require('../config/supabaseClient');
 const emailService = require('../services/emailService');
-const { generateContractPDF } = require('../utils/pdfGenerator');
+const { generateContractPDF } = require('../services/pdfService');
 
 // A. Récupérer les dates réservées
 exports.getBookedDates = async (req, res) => {

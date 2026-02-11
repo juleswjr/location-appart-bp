@@ -6,7 +6,6 @@ const supabase = require('./src/config/supabaseClient');
 const initScheduledJobs = require('./src/cron/scheduler');
 const accountingController = require('./src/controllers/accountingController');
 const emailService = require('./src/services/emailService'); // Je l'ai remonté ici, c'est plus propre
-
 // --- 1. IMPORTS DES ROUTES ---
 try {
   var apartmentRoutes = require('./src/routes/apartmentRoutes');
@@ -76,6 +75,8 @@ app.post('/api/contact', async (req, res) => {
     res.status(500).json({ message: "Erreur lors de l'envoi." });
   }
 });
+
+
 
 // Lancement des tâches planifiées (Cron)
 initScheduledJobs();
