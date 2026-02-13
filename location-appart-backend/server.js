@@ -20,23 +20,25 @@ const app = express();
 // Configuration CORS (Important pour que Vercel puisse parler à Render)
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://location-appart-bp-7t6t.vercel.app/', // Ton site Vercel
+  'https://location-appart-bp-7t6t.vercel.app', // Ton site Vercel
   'https://www.locmontagne.fr',     // Ton futur domaine (au cas où)
   'https://location-appart-bp-api.onrender.com'
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
+    // Autoriser les requêtes sans origine (comme Postman ou les applis mobiles)
     if (!origin) return callback(null, true);
+    
     if (allowedOrigins.indexOf(origin) === -1) {
-      // Pour le debug, on peut autoriser temporairement tout le monde si ça bloque trop
-      // return callback(null, true); 
-      const msg = 'La politique CORS interdit l\'accès depuis cette origine.';
+      const msg = 'La politique CORS de ce site ne permet pas l\'accès depuis cette origine.';
       return callback(new Error(msg), false);
     }
     return callback(null, true);
   },
-  credentials: true
+  credentials: true, // Autorise les cookies/headers sécurisés
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Autorise ces méthodes
+  allowedHeaders: ['Content-Type', 'Authorization'] // Autorise ces headers
 }));
 
 app.use(express.json());
