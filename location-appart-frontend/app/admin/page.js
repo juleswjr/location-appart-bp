@@ -22,15 +22,24 @@ export default function AdminDashboard() {
   }, [router]);
 
   // 2. Charger les réservations depuis le backend
+// 2. Charger les réservations
   const fetchBookings = async () => {
-    // Pour simplifier, on crée une route backend qui renvoie TOUT
-    // Mais ici, on va tricher et appeler Supabase directement pour aller vite
     const { data, error } = await supabase
       .from('bookings')
-      .select('*, apartments(name)')
-      .order('created_at', { ascending: false }); // Les plus récentes en haut
+      .select(`
+        *,
+        apartments (
+          name,
+          arrival_instruction,
+          departure_instruction
+        )
+      `) // 👈 On ajoute les colonnes ici !
+      .order('created_at', { ascending: false });
       
-    if (data) setBookings(data);
+    if (data) {
+      console.log("🔥 DONNÉES REÇUES :", data[0]); 
+      setBookings(data);
+    }
     setLoading(false);
   };
 
@@ -53,50 +62,113 @@ export default function AdminDashboard() {
       alert("Erreur backend");
     }
   };
- const saveCustomEmails = async (id, data) => {
-    // data contient : { custom_arrival_message, custom_departure_message, arrival_mail_date, departure_mail_date }
+  const handleDownloadExcel = () => {
+    window.location.href = 'http://localhost:5000/api/accounting/export';
+  };
+// 4. Sauvegarde des emails personnalisés (DIRECT SUPABASE) 🚀
+  const saveCustomEmails = async (id, data) => {
+    console.log('📧 Sauvegarde des emails pour:', id, data);
+    
     try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
+      // 1. Envoi direct à Supabase
+      // 'data' contient déjà les bons noms de colonnes (ex: custom_arrival_message, etc.)
+      const { error } = await supabase
+        .from('bookings')
+        .update(data) 
+        .eq('id', id);
 
-      if (res.ok) {
-        alert("Configuration e-mail sauvegardée avec succès ! ✅");
-        setEditingBooking(null); // Ferme le modal
-        fetchBookings(); // Rafraîchit la liste
-      } else {
-        alert("Erreur lors de la sauvegarde.");
-      }
+      if (error) throw error;
+
+      console.log('✅ Emails sauvegardés en BDD');
+      alert("Configuration e-mail sauvegardée avec succès ! ✅");
+
+      // 2. Mise à jour de l'affichage local (pour que les données restent si on réouvre le modal)
+      setBookings(prev => prev.map(b => 
+        b.id === id ? { ...b, ...data } : b
+      ));
+
+      // 3. On ferme le modal
+      setEditingBooking(null);
+
     } catch (err) {
-      console.error(err);
+      console.error('❌ Erreur:', err.message);
       alert("Erreur technique lors de la sauvegarde.");
     }
   };
-  // Fonction pour mettre à jour le paiement
-  const handlePaymentUpdate = async (id, newAmount) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount_paid: newAmount })
-      });
+  // Fonction pour mettre à jour le paiement (COMME updateStatus)
+/*const handlePaymentUpdate = async (id, newAmount) => {
+    console.log(`💾 Sauvegarde paiement : ${newAmount}€...`);
 
-      if (res.ok) {
-        // On met à jour l'affichage localement sans recharger toute la page
-        setBookings(prev => prev.map(b => 
-          b.id === id ? { ...b, amount_paid: newAmount } : b
-        ));
-      }
+    try {
+      // ⚠️ J'utilise 'paid_amount'. Si ta colonne s'appelle 'amount_paid', change le nom ci-dessous !
+      const { error } = await supabase
+        .from('bookings')
+        .update({ amount_paid: parseFloat(newAmount) }) 
+        .eq('id', id);
+
+      if (error) throw error;
+
+      console.log("✅ Paiement sauvegardé !");
+      
+      // Mise à jour visuelle immédiate
+      setBookings(prev => prev.map(b => 
+        b.id === id ? { ...b, paid_amount: parseFloat(newAmount) } : b
+      ));
+
     } catch (error) {
-      console.error("Erreur paiement", error);
+      console.error("❌ Erreur paiement :", error.message);
+      alert("Erreur sauvegarde prix !");
+    }
+  };*/
+  // 5. Mise à jour du Paiement (OPTIMISTE)
+// 5. Mise à jour du Paiement (OPTIMISTE & INSTANTANÉE) ⚡
+  const handlePaymentUpdate = async (id, newAmount) => {
+    const amount = parseFloat(newAmount);
+
+    // 1. On met à jour l'affichage TOUT DE SUITE (pour que l'utilisateur voie le résultat)
+    setBookings(prev => prev.map(b => 
+      b.id === id ? { ...b, amount_paid: amount } : b
+    ));
+
+    try {
+      // 2. On sauvegarde en BDD discrètement
+      const { error } = await supabase
+        .from('bookings')
+        .update({ amount_paid: amount }) // Vérifie bien si c'est 'amount_paid' ou 'paid_amount' dans ta BDD
+        .eq('id', id);
+
+      if (error) throw error;
+      console.log("✅ Sauvegardé en BDD");
+
+    } catch (error) {
+      console.error("❌ Erreur sauvegarde :", error.message);
+      alert("Oups, la sauvegarde a échoué. La page va se recharger.");
+      fetchBookings(); // On remet les vraies données en cas d'erreur
     }
   };
-  const handleDownloadExcel = () => {
-    // On redirige simplement vers l'URL du backend, le navigateur gère le téléchargement tout seul
-    window.location.href = 'http://localhost:5000/api/accounting/export';
+// Fonction pour cocher/décocher manuellement les emails
+  const toggleEmailStatus = async (id, field, currentValue) => {
+    try {
+      // 1. Mise à jour Backend (Supabase direct ou via API)
+      // On inverse la valeur actuelle (!currentValue)
+      const { error } = await supabase
+        .from('bookings')
+        .update({ [field]: !currentValue }) // ex: { sent_arrival_email: true }
+        .eq('id', id);
+
+      if (error) throw error;
+
+      // 2. Mise à jour Locale (pour voir la case se cocher instantanément)
+      setBookings(prev => prev.map(b => 
+        b.id === id ? { ...b, [field]: !currentValue } : b
+      ));
+
+    } catch (error) {
+      console.error("Erreur update email", error);
+      alert("Erreur lors de la mise à jour du statut email");
+    }
   };
+
 
   if (loading) return <div className="p-10">Chargement...</div>;
 
@@ -176,17 +248,25 @@ export default function AdminDashboard() {
                       <div className="flex items-center gap-1">
                         <input
                           type="number"
-                          className={`w-20 border p-1 rounded font-bold text-right focus:ring-2 focus:ring-blue-500 outline-none ${
-                            // UTILISE LA VARIABLE isPaid
-                            isPaid
-                              ? 'text-green-600 border-green-200 bg-green-50' 
-                              : 'text-orange-600 border-orange-200 bg-orange-50'
+                          // 👇 L'astuce magique : Si 'paid' change, l'input se rafraîchit forcément
+                          key={paid} 
+                          
+                          className={`w-24 border p-1 rounded font-bold text-right outline-none ${
+                            isPaid ? 'text-green-600 bg-green-50' : 'text-orange-600 bg-orange-50'
                           }`}
-                          // IMPORTANT : Utilise value et onChange pour lier au state en direct si possible, 
-                          // mais avec defaultValue + onBlur ça marche aussi.
-                          defaultValue={paid} 
+                          
+                          defaultValue={paid} // On utilise defaultValue pour ne pas bloquer la saisie
+                          
+                          // 1. Sauvegarde quand on clique ailleurs (c'est le déclencheur principal)
                           onBlur={(e) => handlePaymentUpdate(booking.id, e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+                          
+                          // 2. Sur Entrée, on "lâche" le focus, ce qui déclenche le onBlur du dessus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault(); // Empêche le comportement par défaut
+                              e.target.blur();    // Enlève le curseur -> Déclenche le onBlur -> Sauvegarde
+                            }
+                          }}
                         />
                         <span className="text-gray-400">€</span>
                       </div>

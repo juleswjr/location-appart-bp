@@ -2,6 +2,7 @@
 const supabase = require('../config/supabaseClient');
 const emailService = require('../services/emailService');
 const { generateContractPDF } = require('../services/pdfService');
+const priceService = require('../services/priceService');
 
 // A. Récupérer les dates réservées
 exports.getBookedDates = async (req, res) => {
@@ -11,7 +12,7 @@ exports.getBookedDates = async (req, res) => {
       .from('bookings')
       .select('start_date, end_date, status')
       .eq('apartment_id', apartmentId)
-      .neq('status', 'cancelled'); // On ignore les annulées
+      .in('status', ['confirmed']); // ✅ On ignore 'cancelled' et 'rejected'
 
     if (error) throw error;
     res.json(data);
@@ -20,13 +21,13 @@ exports.getBookedDates = async (req, res) => {
   }
 };
 
-// B. Créer une nouvelle réservation (C'est ici que tout change !)
+// B. Créer une nouvelle réservation
 exports.createBooking = async (req, res) => {
   const { 
     apartment_id, 
     start_date, 
     end_date, 
-    has_parking, // 👇 On récupère l'info parking
+    has_parking,
     customer_name, 
     customer_email, 
     customer_phone, 
@@ -36,124 +37,284 @@ exports.createBooking = async (req, res) => {
   } = req.body;
 
   try {
-    // 1. Récupérer infos de l'appart (pour le nom et le prix par défaut)
+    // 1. Récupérer infos de l'appart
     const { data: apartment } = await supabase
       .from('apartments')
       .select('*')
       .eq('id', apartment_id)
       .single();
 
-    if (!apartment) return res.status(404).json({ message: "Appartement introuvable" });
+    if (!apartment) {
+      return res.status(404).json({ message: "Appartement introuvable" });
+    }
 
-    // 2. Vérifier si les dates sont libres
-    const { data: conflicts } = await supabase
+ // 2. NORMALISATION & SÉCURITÉ DES DATES 🛡️
+    const start = new Date(start_date);
+    const end = new Date(end_date);
+    
+// apartment.changeover_day vaut 0 (Dimanche) ou 6 (Samedi)
+    const requiredDay = apartment.changeover_day; 
+    
+    if (start.getDay() !== requiredDay || end.getDay() !== requiredDay) {
+      const dayName = requiredDay === 0 ? "dimanche" : "samedi";
+      return res.status(400).json({ 
+        message: `Pour cet appartement, les locations doivent commencer et finir un ${dayName}.` 
+      });
+    }
+
+    // B. Vérifier que la fin est après le début
+    if (end <= start) {
+      return res.status(400).json({ message: "La date de départ doit être après l'arrivée." });
+    }
+
+    const normalizedStartDate = start.toISOString().split('T')[0];
+    const normalizedEndDate = end.toISOString().split('T')[0];
+
+    console.log('🔍 Vérification des conflits...');
+    console.log('   - Dates normalisées:', normalizedStartDate, '→', normalizedEndDate);
+
+    // 3. VÉRIFICATION DES CONFLITS (LOGIQUE BACK-TO-BACK) 🧠
+    // On cherche si une réservation CONFIRMÉE croise nos dates.
+    // .lt ('start_date', end) -> Elle commence AVANT que je parte
+    // .gt ('end_date', start) -> Elle finit APRÈS que j'arrive
+    const { data: conflicts, error: conflictError } = await supabase
       .from('bookings')
-      .select('*')
+      .select('id')
       .eq('apartment_id', apartment_id)
-      .neq('status', 'cancelled')
-      .or(`start_date.lte.${end_date},end_date.gte.${start_date}`);
+      .eq('status', 'confirmed') // Uniquement les confirmées
+      .lt('start_date', normalizedEndDate) 
+      .gt('end_date', normalizedStartDate);
+
+    if (conflictError) throw conflictError;
 
     if (conflicts && conflicts.length > 0) {
-      return res.status(400).json({ message: "Ces dates ne sont plus disponibles." });
+      return res.status(409).json({ message: "Ces dates ne sont plus disponibles." });
     }
 
-    // --- 💰 3. CALCUL DU PRIX INTELLIGENT ---
-    let finalPrice = 0;
-    
-    // On nettoie la date pour chercher dans la BDD (YYYY-MM-DD)
-    const searchDate = new Date(start_date).toISOString().split('T')[0];
+    // 4. ✅ CALCUL DU PRIX VIA LE SERVICE
+    console.log('💰 Calcul du prix via priceService...');
+    const finalPrice = await priceService.calculateStayPrice(
+      apartment_id,
+      apartment.price_per_night, // Prix par défaut en centimes
+      normalizedStartDate,
+      normalizedEndDate,
+      has_parking
+    );
 
-    // On cherche s'il y a un PRIX SPÉCIAL pour cette semaine précise
-    const { data: seasonalData } = await supabase
-      .from('seasonal_prices')
-      .select('price')
-      .eq('apartment_id', apartment_id)
-      .eq('start_date', searchDate)
-      .single();
+    console.log("💰 PRIX TOTAL FINAL :", finalPrice, "€");
 
-    if (seasonalData) {
-      console.log(`📅 Prix saisonnier trouvé pour le ${searchDate} : ${seasonalData.price}€`);
-      finalPrice = parseFloat(seasonalData.price);
-    } else {
-      console.log(`ℹ️ Pas de prix spécial pour le ${searchDate}, utilisation du prix par défaut.`);
-      // Assure-toi que apartment.price_per_night contient bien ton prix semaine par défaut
-      finalPrice = parseFloat(apartment.price_per_night || 0); 
-    }
-
-    // On ajoute l'OPTION PARKING (80€)
-    if (has_parking === true) {
-      console.log("🚗 Option Parking ajoutée (+80€)");
-      finalPrice += 80;
-    }
-
-    console.log("💰 PRIX TOTAL FINAL :", finalPrice);
-
-    // --- 4. CRÉATION DU PDF ---
-    // On passe le vrai prix et l'option parking au générateur PDF
+    // 5. CRÉATION DU PDF
     const pdfPath = await generateContractPDF({
       customer_name,
+      customer_email,
+      customer_phone,
+      customer_address,
       apartment_name: apartment.name,
-      start_date,
-      end_date,
-      total_price: finalPrice, // On utilise le prix calculé
-      has_parking: has_parking // On l'affiche sur le PDF (si ton PDF le gère)
+      start_date: normalizedStartDate,
+      end_date: normalizedEndDate,
+      total_price: finalPrice, // ✅ Prix calculé par le service
+      has_parking: has_parking
     });
 
-    // --- 5. INSERTION EN BDD ---
+    // 6. INSERTION EN BDD (avec dates normalisées)
     const { data: newBooking, error: insertError } = await supabase
       .from('bookings')
       .insert([{ 
           apartment_id, 
-          start_date, 
-          end_date, 
+          start_date: normalizedStartDate,
+          end_date: normalizedEndDate,
           status: 'pending',
-          total_price: finalPrice, // ✅ On sauvegarde le bon prix
-          has_parking: has_parking, // ✅ On sauvegarde le choix parking
+          total_price: finalPrice, // ✅ Prix calculé
+          has_parking: has_parking,
           customer_name, 
           customer_email, 
           customer_phone, 
           customer_address, 
           customer_dob, 
-          message 
+          message,
+          contract_url: pdfPath
         }])
       .select()
       .single();
 
     if (insertError) throw insertError;
 
-    // --- 6. ENVOI DES EMAILS ---
-    // Email au client
-    await emailService.sendBookingConfirmation(
+    // 7. ENVOI DES EMAILS
+    await emailService.sendConfirmationAskEmail(
       customer_email, 
       customer_name, 
       {
         apartment_name: apartment.name,
-        start_date,
-        end_date,
-        total_price: finalPrice // Le client voit le bon prix dans le mail
+        start_date: normalizedStartDate,
+        end_date: normalizedEndDate,
+        total_price: finalPrice // ✅ Prix calculé
       }, 
       pdfPath
     );
 
-    // Email à toi (l'admin)
-    await emailService.sendAdminNotification({
+    await emailService.sendNewBookingNotification({
         apartment_name: apartment.name,
-        start_date,
-        end_date,
+        start_date: normalizedStartDate,
+        end_date: normalizedEndDate,
         customer_name,
-        total_price: finalPrice,
+        total_price: finalPrice, // ✅ Prix calculé
         has_parking: has_parking ? "OUI" : "NON"
     });
 
-    res.status(201).json({ message: "Réservation créée avec succès !", booking: newBooking });
+    res.status(201).json({ 
+      message: "Réservation créée avec succès !", 
+      booking: newBooking 
+    });
 
   } catch (error) {
-    console.error(error);
+    console.error('❌ Erreur dans createBooking:', error);
     res.status(500).json({ message: "Erreur serveur lors de la réservation." });
   }
 };
 
-// ... Les autres fonctions (confirm, updateStatus) restent inchangées ...
-// Ajoute-les si elles n'y sont plus, ou garde la fin de ton fichier actuel.
-exports.confirmBooking = async (req, res) => { /* ... ton code existant ... */ };
-exports.updateBookingStatus = async (req, res) => { /* ... ton code existant ... */ };
+// C. Confirmer une réservation
+exports.confirmBooking = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // 1. Récupérer la réservation avec les infos de l'appartement
+    const { data: booking, error: fetchError } = await supabase
+      .from('bookings')
+      .select('*, apartments(name, price_per_night)')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !booking) {
+      return res.status(404).json({ message: "Réservation introuvable" });
+    }
+
+    // 2. ✅ RECALCULER LE PRIX (au cas où il a changé)
+    console.log('💰 Recalcul du prix pour confirmation...');
+    const officialPrice = await priceService.calculateStayPrice(
+      booking.apartment_id,
+      booking.apartments.price_per_night,
+      booking.start_date,
+      booking.end_date,
+      booking.has_parking
+    );
+
+    console.log('   - Prix recalculé:', officialPrice, '€');
+
+    // 3. Générer le PDF avec le prix officiel
+    const pdfUrl = await generateContractPDF({
+      customer_name: booking.customer_name,
+      customer_email: booking.customer_email,
+      customer_phone: booking.customer_phone,
+      customer_address: booking.customer_address,
+      apartment_name: booking.apartments.name,
+      start_date: booking.start_date,
+      end_date: booking.end_date,
+      total_price: officialPrice, // ✅ Prix recalculé
+      has_parking: booking.has_parking
+    });
+
+    // 4. Envoyer l'email de confirmation avec le bon prix
+    await emailService.sendBookingConfirmation(
+      booking.customer_email,
+      booking.customer_name,
+      {
+        apartment_name: booking.apartments.name,
+        start_date: booking.start_date,
+        end_date: booking.end_date,
+        total_price: officialPrice // ✅ Prix recalculé
+      },
+      pdfUrl
+    );
+
+    // 5. Mettre à jour le statut ET le prix (au cas où)
+    const { error: updateError } = await supabase
+      .from('bookings')
+      .update({ 
+        status: 'confirmed',
+        total_price: officialPrice, // ✅ On met à jour avec le prix recalculé
+        contract_url: pdfUrl
+      })
+      .eq('id', id);
+
+    if (updateError) throw updateError;
+
+    res.status(200).json({ 
+      message: "Réservation confirmée, contrat généré et envoyé !", 
+      pdfUrl,
+      price: officialPrice
+    });
+
+  } catch (error) {
+    console.error("❌ Erreur lors de la confirmation :", error);
+    res.status(500).json({ message: "Erreur serveur.", error: error.message });
+  }
+};
+
+// D. Mettre à jour le statut d'une réservation
+exports.updateBookingStatus = async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+
+  try {
+    const { data, error } = await supabase
+      .from('bookings')
+      .update({ status })
+      .eq('id', id)
+      .select();
+
+    if (error) throw error;
+
+    // TODO: Envoyer un email d'annulation si status === 'cancelled'
+
+    res.status(200).json({ 
+      message: `Statut mis à jour vers : ${status}`, 
+      booking: data[0] 
+    });
+
+  } catch (error) {
+    console.error("❌ Erreur mise à jour statut :", error);
+    res.status(500).json({ message: "Erreur serveur." });
+  }
+};
+
+// D. Mettre à jour N'IMPORTE QUEL champ d'une réservation
+exports.updateBooking = async (req, res) => {
+  const { id } = req.params;
+  const updates = req.body; // On récupère tous les champs envoyés
+
+  console.log('📝 Mise à jour de la réservation:', id);
+  console.log('   - Champs à modifier:', updates);
+
+  try {
+    // Validation : empêcher de modifier l'ID ou l'apartment_id par erreur
+    delete updates.id;
+    delete updates.apartment_id;
+    delete updates.created_at;
+
+    const { data, error } = await supabase
+      .from('bookings')
+      .update(updates) // ✅ Met à jour TOUS les champs envoyés
+      .eq('id', id)
+      .select();
+
+    if (error) {
+      console.error('❌ Erreur Supabase:', error);
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ message: "Réservation introuvable" });
+    }
+
+    console.log('✅ Réservation mise à jour:', data[0]);
+
+    res.status(200).json({ 
+      message: "Réservation mise à jour avec succès", 
+      booking: data[0] 
+    });
+
+  } catch (error) {
+    console.error("❌ Erreur mise à jour réservation :", error);
+    res.status(500).json({ message: "Erreur serveur.", error: error.message });
+  }
+};

@@ -11,49 +11,51 @@ const transporter = nodemailer.createTransport({
 });
 
 // 1. Mail pour prévenir le PROPRIO (Toi)
-exports.sendNewBookingNotification = async (bookingDetails, apartmentName,bookingId) => {
+exports.sendNewBookingNotification = async (data) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_PROPRIO, // Tu te l'envoies à toi-même
-    subject: `🔔 Nouvelle demande : ${apartmentName}`,
+    subject: `🔔 Nouvelle demande : ${data.apartment_name}`,
     text: `
       Nouvelle demande reçue !
       
-      Numéro de réservation : #${bookingId}
+      Appartement : ${data.apartment_name}
+      Client : ${data.customer_name}
+      Dates : du ${new Date(data.start_date).toLocaleDateString('fr-FR')} au ${new Date(data.end_date).toLocaleDateString('fr-FR')}
+      
+      Prix total estimé : ${data.total_price} €
+      Option Parking : ${data.has_parking}
 
-      Client : ${bookingDetails.customer_name}
-      Email : ${bookingDetails.customer_email}
-      Dates : du ${bookingDetails.start_date} au ${bookingDetails.end_date}
-      Message : "${bookingDetails.message}"
       Va sur ton dashboard pour valider ou refuser.
     `
   };
+  
   return transporter.sendMail(mailOptions);
 };
 
 // 2. Mail pour prévenir le CLIENT (Confirmation de reservation)
 
-exports.sendBookingConfirmation = async (email, name, apartmentName, startDate, endDate, contractUrl) => {
+exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
   
   const mailOptions = {
     from: `"Loc'Montagne" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: `✅ Réservation Confirmée - ${apartmentName}`,
+    subject: `✅ Réservation Confirmée - ${details.apartment_name}`,
     html: `
       <div style="font-family: Arial, sans-serif; color: #333;">
         <h2 style="color: #166534;">Félicitations ${name} !</h2>
-        <p>Nous avons le plaisir de vous confirmer votre réservation pour <strong>${apartmentName}</strong>.</p>
-        <p><strong>Dates :</strong> Du ${startDate} au ${endDate}</p>
+        <p>Nous avons le plaisir de vous confirmer votre réservation pour <strong>${details.apartment_name}</strong>.</p>
+        <p><strong>Dates :</strong> Du ${details.start_date} au ${details.end_date}</p>
         <br>
         <p>📄 <strong>Vous trouverez votre contrat de location en pièce jointe de cet email.</strong></p>
         <p>Merci de votre confiance et à très bientôt !</p>
       </div>
     `,
-    // 👇 C'EST ICI LA MAGIE : ON ATTACHE LE PDF VIA L'URL
+    // Pièce jointe : Le PDF via l'URL Supabase
     attachments: [
       {
-        filename: `Contrat_Location_${apartmentName}.pdf`, // Le nom que verra le client
-        path: contractUrl // L'URL Supabase (ex: https://Supabase.../contract.pdf)
+        filename: `Contrat_Location_${details.apartment_name.replace(/\s/g, '_')}.pdf`,
+        path: contractUrl
       }
     ]
   };
@@ -64,19 +66,33 @@ exports.sendBookingConfirmation = async (email, name, apartmentName, startDate, 
 
 
 // 3. Mail pour prévenir le CLIENT (Confirmation de demande)
-exports.sendConfirmationAskEmail = async (clientEmail, clientName, apartmentName, bookingId) => {
+exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetails, pdfUrl) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: clientEmail,
-    subject: `⏳ Demande reçue - ${apartmentName}`,
+    subject: `⏳ Demande reçue - ${bookingDetails.apartment_name}`,
     html: `
-      <div style="font-family: Arial, sans-serif; color: #333;">
-        <h1>Bonjour ${clientName},</h1>
-        <p>Nous avons bien reçu votre demande de réservation pour l'appartement <strong>${apartmentName}</strong>.</p>
-        <p>Votre numéro de dossier est le : <strong>#${bookingId}</strong></p>
-        <br>
+      <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
+        <h1 style="color: #2563EB;">Bonjour ${clientName},</h1>
+        
+        <p>Nous avons bien reçu votre demande de réservation pour l'appartement <strong>${bookingDetails.apartment_name}</strong>.</p>
+        
+        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h3 style="margin-top: 0;">Récapitulatif de la demande :</h3>
+          <p><strong>📅 Du :</strong> ${bookingDetails.start_date}</p>
+          <p><strong>📅 Au :</strong> ${bookingDetails.end_date}</p>
+          <p><strong>💰 Prix total :</strong> ${bookingDetails.total_price} €</p>
+        </div>
+
         <p>Le propriétaire va étudier votre demande dans les plus brefs délais.</p>
-        <p>Si celle-ci est validée, vous recevrez un second email contenant votre contrat de location.</p>
+        
+        <p style="text-align: center; margin: 30px 0;">
+          <a href="${pdfUrl}" style="background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+            Télécharger votre récapitulatif (PDF)
+          </a>
+        </p>
+
+        <p>Vous recevrez un nouvel email dès que la réservation sera confirmée.</p>
         <br>
         <p>À très vite !</p>
       </div>
