@@ -20,9 +20,9 @@ const app = express();
 // Configuration CORS (Important pour que Vercel puisse parler à Render)
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://locmontagne.vercel.app', // Ton site Vercel
+  'https://location-appart-bp-7t6t.vercel.app/', // Ton site Vercel
   'https://www.locmontagne.fr',     // Ton futur domaine (au cas où)
-  'https://locmontagne.fr'
+  'https://location-appart-bp-api.onrender.com'
 ];
 
 app.use(cors({
