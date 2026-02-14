@@ -13,7 +13,7 @@ const transporter = nodemailer.createTransport({
 */
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
-  port:  '465', // Force 465
+  port:  465, // Force 465
   secure: true, // Vrai pour le port 465
   auth: {
     user: process.env.EMAIL_USER,
