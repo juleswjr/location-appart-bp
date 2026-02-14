@@ -2,7 +2,7 @@
 const nodemailer = require('nodemailer');
 const { format } = require("date-fns");
 const { fr } = require("date-fns/locale");
-/*
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -10,7 +10,8 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-*/
+
+/*
 console.log("   - User:", process.env.EMAIL_USER ? "Défini ✅" : "MANQUANT ❌");
 console.log("   - Pass:", process.env.EMAIL_PASS ? "Défini ✅" : "MANQUANT ❌");
 const transporter = nodemailer.createTransport({
@@ -21,7 +22,7 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-});
+})*/
 transporter.verify(function (error, success) {
   if (error) {
     console.error('❌ ERREUR CRITIQUE SMTP :', error);
@@ -44,7 +45,7 @@ exports.sendNewBookingNotification = async (data) => {
       Client : ${data.customer_name}
       Dates : du ${new Date(data.start_date).toLocaleDateString('fr-FR')} au ${new Date(data.end_date).toLocaleDateString('fr-FR')}
       
-      Prix total estimé : ${data.total_price} €
+      Prix total estimé : ${data.total_price/100} €
       Option Parking : ${data.has_parking}
 
       Va sur ton dashboard pour valider ou refuser.
@@ -107,7 +108,7 @@ exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetail
           <h3 style="margin-top: 0;">Récapitulatif de la demande :</h3>
           <p><strong>📅 Du :</strong> ${bookingDetails.start_date}</p>
           <p><strong>📅 Au :</strong> ${bookingDetails.end_date}</p>
-          <p><strong>💰 Prix total :</strong> ${bookingDetails.total_price} €</p>
+          <p><strong>💰 Prix total :</strong> ${bookingDetails.total_price/100} €</p>
         </div>
 
         <p>Le propriétaire va étudier votre demande dans les plus brefs délais.</p>

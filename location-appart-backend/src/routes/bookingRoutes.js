@@ -11,7 +11,7 @@ router.post('/', bookingController.createBooking);
 router.post('/:id/confirm', bookingController.confirmBooking);
 
 // Confirmer une demande
-router.put('/:id/confirm', bookingController.confirmBooking);
+//router.put('/:id/confirm', bookingController.confirmBooking);
 router.put('/:id', bookingController.updateBookingStatus);
 router.put('/:id', bookingController.updateBooking);
 

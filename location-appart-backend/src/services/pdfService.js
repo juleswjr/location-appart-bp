@@ -83,7 +83,7 @@ exports.generateContractPDF = async (data) => {
     // Attention : data.total_price est déjà en euros dans ton controller ? 
     // Si c'est des centimes, garde la division /100. Sinon enlève-la.
     // Supposons que c'est des euros comme dans ton controller précédent :
-    doc.text(`PRIX TOTAL : ${data.total_price} €`); 
+    doc.text(`PRIX TOTAL : ${data.total_price/100} €`); 
     
     if (data.has_parking) {
         doc.moveDown();

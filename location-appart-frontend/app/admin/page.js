@@ -43,28 +43,57 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
-  // 3. Action de validation
   const updateStatus = async (id, newStatus) => {
-    if (!confirm(`Es-tu sûr de vouloir passer cette résa en ${newStatus} ?`)) return;
+      // 1. Confirmation visuelle
+      if (!confirm(`Es-tu sûr de vouloir passer cette résa en ${newStatus} ?`)) return;
 
-    try {
-      const res = await fetch(`http://localhost:5000/api/bookings/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
-      });
+      // Utilise la variable d'environnement pour que ça marche en ligne !
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      let url = '';
+      let method = '';
+      let body = {};
 
-      if (res.ok) {
-        alert("Statut mis à jour !");
-        fetchBookings(); // On rafraîchit la liste
+      // 2. AIGUILLAGE INTELLIGENT 🧠
+      if (newStatus === 'confirmed') {
+          // Cas VALIDATION : On appelle la route spéciale "confirm"
+          // Note : On n'envoie pas de body 'status' car la route sait déjà quoi faire
+          url = `${apiUrl}/api/bookings/${id}/confirm`;
+          method = 'POST'; 
+      } else {
+          // Cas REFUS / ANNULATION : On appelle la route standard de mise à jour
+          url = `${apiUrl}/api/bookings/${id}`;
+          method = 'PUT';
+          body = { status: newStatus };
       }
-    } catch (err) {
-      alert("Erreur backend");
-    }
-  };
-  const handleDownloadExcel = () => {
-    window.location.href = 'http://localhost:5000/api/accounting/export';
-  };
+
+      try {
+        // 3. Appel au serveur
+        const res = await fetch(url, {
+          method: method,
+          headers: { 'Content-Type': 'application/json' },
+          // Si la méthode est POST (confirmation), on envoie un body vide ou null, 
+          // sinon on envoie le statut
+          body: method === 'PUT' ? JSON.stringify(body) : undefined 
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          alert(newStatus === 'confirmed' ? "Réservation validée et mails envoyés ! ✅" : "Statut mis à jour.");
+          fetchBookings(); // On rafraîchit la liste
+        } else {
+          const err = await res.json();
+          alert("Erreur serveur : " + (err.message || "Inconnue"));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Erreur de connexion au backend");
+      }
+    };
+
+    const handleDownloadExcel = () => {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      window.location.href = `${apiUrl}/api/accounting/export`;
+    };
 // 4. Sauvegarde des emails personnalisés (DIRECT SUPABASE) 🚀
   const saveCustomEmails = async (id, data) => {
     console.log('📧 Sauvegarde des emails pour:', id, data);

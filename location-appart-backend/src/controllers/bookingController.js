@@ -308,7 +308,6 @@ exports.updateBookingStatus = async (req, res) => {
     if (error) throw error;
 
     // TODO: Envoyer un email d'annulation si status === 'cancelled'
-
     res.status(200).json({ 
       message: `Statut mis à jour vers : ${status}`, 
       booking: data[0] 
