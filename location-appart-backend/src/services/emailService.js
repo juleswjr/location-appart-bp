@@ -11,6 +11,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 */
+console.log("   - User:", process.env.EMAIL_USER ? "Défini ✅" : "MANQUANT ❌");
+console.log("   - Pass:", process.env.EMAIL_PASS ? "Défini ✅" : "MANQUANT ❌");
 const transporter = nodemailer.createTransport({
   host: 'smtp.gmail.com',
   port:  465, // Force 465
@@ -20,9 +22,18 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+transporter.verify(function (error, success) {
+  if (error) {
+    console.error('❌ ERREUR CRITIQUE SMTP :', error);
+  } else {
+    console.log('✅ Serveur SMTP prêt à envoyer des emails !');
+  }
+});
 // 1. Mail pour prévenir le PROPRIO (Toi)
 exports.sendNewBookingNotification = async (data) => {
-  const mailOptions = {
+  console.log("📤 Envoi mail PROPRIO...");
+  try{
+  const mailOptions = await transporter.sendMail({
     from: process.env.EMAIL_USER,
     to: process.env.EMAIL_PROPRIO, // Tu te l'envoies à toi-même
     subject: `🔔 Nouvelle demande : ${data.apartment_name}`,
@@ -37,10 +48,15 @@ exports.sendNewBookingNotification = async (data) => {
       Option Parking : ${data.has_parking}
 
       Va sur ton dashboard pour valider ou refuser.
-    `
-  };
-  
-  return transporter.sendMail(mailOptions);
+    `});
+    console.log("✅ Mail PROPRIO envoyé:", mailOptions.messageId);
+    return mailOption;
+  }
+  catch (err) {
+    console.error("❌ Erreur envoi mail PROPRIO:", err);
+    throw err;
+  }
+  //return transporter.sendMail(mailOptions);
 };
 
 // 2. Mail pour prévenir le CLIENT (Confirmation de reservation)
