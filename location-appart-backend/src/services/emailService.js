@@ -15,7 +15,7 @@ console.log("   - User:", process.env.EMAIL_USER ? "Défini ✅" : "MANQUANT ❌
 console.log("   - Pass:", process.env.EMAIL_PASS ? "Défini ✅" : "MANQUANT ❌");
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST||'smtp.gmail.com',
-  port: process.env.EMAIL_PORT|| 587, // Force 465
+  port: parseInt(process.env.EMAIL_PORT)|| 587, // Force 465
   secure: process.env.EMAIL_SECURE||false, // Vrai pour le port 465
   auth: {
     user: process.env.EMAIL_USER,
