@@ -184,7 +184,7 @@ exports.createBooking = async (req, res) => {
               }, 
               pdfPath
             ),
-            await emailService.sendNewBookingNotification({
+            emailService.sendNewBookingNotification({
                 apartment_name: apartment.name,
                 start_date: normalizedStartDate,
                 end_date: normalizedEndDate,
