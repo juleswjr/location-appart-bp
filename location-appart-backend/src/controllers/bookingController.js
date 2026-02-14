@@ -138,7 +138,7 @@ exports.createBooking = async (req, res) => {
       .single();
 
     if (insertError) throw insertError;
-
+    /*
     // 7. ENVOI DES EMAILS
     await emailService.sendConfirmationAskEmail(
       customer_email, 
@@ -160,11 +160,54 @@ exports.createBooking = async (req, res) => {
         total_price: finalPrice, // ✅ Prix calculé
         has_parking: has_parking ? "OUI" : "NON"
     });
-
+        
     res.status(201).json({ 
       message: "Réservation créée avec succès !", 
       booking: newBooking 
     });
+*/
+        // 7. ENVOI DES EMAILS (SÉCURISÉ) 🛡️
+    // On met ça dans un try/catch SPÉCIFIQUE pour ne pas bloquer la réponse au client
+    try {
+        console.log("📧 Tentative d'envoi des emails...");
+        
+        // On lance les deux envois en parallèle pour gagner du temps
+        await Promise.all([
+            emailService.sendConfirmationAskEmail(
+              customer_email, 
+              customer_name, 
+              {
+                apartment_name: apartment.name,
+                start_date: normalizedStartDate,
+                end_date: normalizedEndDate,
+                total_price: finalPrice // ✅ Prix calculé
+              }, 
+              pdfPath
+            ),
+            await emailService.sendNewBookingNotification({
+                apartment_name: apartment.name,
+                start_date: normalizedStartDate,
+                end_date: normalizedEndDate,
+                customer_name,
+                total_price: finalPrice, // ✅ Prix calculé
+                has_parking: has_parking ? "OUI" : "NON"
+            })
+        ]);
+        
+        console.log("✅ Emails envoyés avec succès !");
+
+    } catch (emailError) {
+        // ⚠️ ICI C'EST IMPORTANT : On log l'erreur mais ON NE LANCE PAS D'EXCEPTION (pas de throw)
+        console.error("⚠️ ATTENTION : La réservation est faite mais les emails ont échoué.", emailError.message);
+        // On continue comme si de rien n'était pour répondre au client
+    }
+
+    // 8. RÉPONSE AU CLIENT (Même si l'email a planté, on renvoie 201 Created)
+    res.status(201).json({ 
+      message: "Réservation créée avec succès !", 
+      booking: newBooking 
+    });
+
 
   } catch (error) {
     console.error('❌ Erreur dans createBooking:', error);
