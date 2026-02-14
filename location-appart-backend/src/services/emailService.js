@@ -2,6 +2,7 @@
 const nodemailer = require('nodemailer');
 const { format } = require("date-fns");
 const { fr } = require("date-fns/locale");
+/*
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -9,7 +10,16 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-
+*/
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.EMAIL_PORT || '465'), // Force 465
+  secure: true, // Vrai pour le port 465
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 // 1. Mail pour prévenir le PROPRIO (Toi)
 exports.sendNewBookingNotification = async (data) => {
   const mailOptions = {
