@@ -214,7 +214,7 @@ exports.sendNewBookingNotification = async (data) => {
           <p><strong>Appartement :</strong> ${data.apartment_name}</p>
           <p><strong>Client :</strong> ${data.customer_name}</p>
           <p><strong>Dates :</strong> du ${data.start_date} au ${data.end_date}</p>
-          <p><strong>Prix total :</strong> ${data.total_price} €</p>
+          <p><strong>Prix total :</strong> ${data.total_price/100} €</p>
           <p><strong>Parking :</strong> ${data.has_parking}</p>
           <br>
           <p>👉 <a href="https://votre-admin.vercel.app/admin">Accéder au dashboard</a></p>
@@ -253,7 +253,7 @@ exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
           <h2 style="color: #166534;">Félicitations ${name} !</h2>
           <p>Votre réservation pour <strong>${details.apartment_name}</strong> est confirmée.</p>
           <p><strong>Dates :</strong> Du ${details.start_date} au ${details.end_date}</p>
-          <p><strong>Prix :</strong> ${details.total_price} €</p>
+          <p><strong>Prix :</strong> ${details.total_price/100} €</p>
           <br>
           <p>📄 <a href="${contractUrl}">Télécharger votre contrat</a></p>
           <p>À très bientôt !</p>
@@ -292,7 +292,7 @@ exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetail
             <h3 style="margin-top: 0;">Récapitulatif :</h3>
             <p>📅 <strong>Du :</strong> ${bookingDetails.start_date}</p>
             <p>📅 <strong>Au :</strong> ${bookingDetails.end_date}</p>
-            <p>💰 <strong>Prix :</strong> ${bookingDetails.total_price} €</p>
+            <p>💰 <strong>Prix :</strong> ${bookingDetails.total_price/100} €</p>
           </div>
 
           <p>Le propriétaire va étudier votre demande rapidement.</p>
