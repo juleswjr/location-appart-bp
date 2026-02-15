@@ -16,10 +16,6 @@ const transporter = nodemailer.createTransport({
 console.log("🔧 Configuration SMTP OVH:");
 console.log("   - Host:", process.env.EMAIL_HOST);
 console.log("   - Port:", process.env.EMAIL_PORT);
-
-
-
-
 console.log("   - User:", process.env.EMAIL_USER ? "Défini ✅" : "MANQUANT ❌");
 console.log("   - Pass:", process.env.EMAIL_PASS ? "Défini ✅" : "MANQUANT ❌");
 const transporter = nodemailer.createTransport({
@@ -40,11 +36,7 @@ transporter.verify(function (error, success) {
 });
 // 1. Mail pour prévenir le PROPRIO (Toi)
 exports.sendNewBookingNotification = async (data) => {
-  console.log("🔧 Configuration SMTP OVH:");
-console.log("   - Host:", process.env.EMAIL_HOST);
-console.log("   - Port:", process.env.EMAIL_PORT);
-console.log("   - User:", process.env.EMAIL_USER ? "Défini ✅" : "MANQUANT ❌");
-console.log("   - Pass:", process.env.EMAIL_PASS ? "Défini ✅" : "MANQUANT ❌");
+
   console.log("📤 Envoi mail PROPRIO...");
   try{
   const mailOptions = await transporter.sendMail({
