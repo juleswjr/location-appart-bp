@@ -1,5 +1,5 @@
 // src/services/emailService.js
-const nodemailer = require('nodemailer');
+/*const nodemailer = require('nodemailer');
 const { format } = require("date-fns");
 const { fr } = require("date-fns/locale");
 /*
@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
-*/
+
 
 
 console.log("🔧 Configuration SMTP OVH:");
@@ -186,3 +186,203 @@ exports.sendArrivedEmail = async (clientEmail, clientName, apartmentName,custom_
   };
   return transporter.sendMail(mailOptions);
 };
+*/
+// src/services/emailService.js
+const { Resend } = require('resend');
+
+console.log("\n========================================");
+console.log("🔧 CONFIGURATION RESEND");
+console.log("========================================");
+console.log("   API Key:", process.env.RESEND_API_KEY ? "✅ Défini" : "❌ NON DÉFINI");
+console.log("   Proprio:", process.env.EMAIL_PROPRIO || "❌ NON DÉFINI");
+console.log("========================================\n");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// 1. Mail au PROPRIO
+exports.sendNewBookingNotification = async (data) => {
+  console.log("\n📧 ========== ENVOI EMAIL PROPRIO ==========");
+  
+  try {
+    const { data: email, error } = await resend.emails.send({
+      from: 'Loc Montagne <onboarding@resend.dev>', // Email par défaut Resend
+      to: process.env.EMAIL_PROPRIO,
+      subject: `🔔 Nouvelle demande : ${data.apartment_name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif;">
+          <h2>Nouvelle demande reçue !</h2>
+          <p><strong>Appartement :</strong> ${data.apartment_name}</p>
+          <p><strong>Client :</strong> ${data.customer_name}</p>
+          <p><strong>Dates :</strong> du ${data.start_date} au ${data.end_date}</p>
+          <p><strong>Prix total :</strong> ${data.total_price} €</p>
+          <p><strong>Parking :</strong> ${data.has_parking}</p>
+          <br>
+          <p>👉 <a href="https://votre-admin.vercel.app/admin">Accéder au dashboard</a></p>
+        </div>
+      `
+    });
+
+    if (error) {
+      console.error("❌ Erreur Resend:", error);
+      throw error;
+    }
+
+    console.log("✅ Email PROPRIO envoyé via Resend");
+    console.log("   ID:", email.id);
+    console.log("========================================\n");
+    
+    return email;
+    
+  } catch (err) {
+    console.error("❌ Erreur envoi:", err.message);
+    throw err;
+  }
+};
+
+// 2. Mail de confirmation au CLIENT
+exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
+  console.log("\n📧 ========== CONFIRMATION CLIENT ==========");
+  
+  try {
+    const { data: result, error } = await resend.emails.send({
+      from: 'Loc Montagne <onboarding@resend.dev>',
+      to: email,
+      subject: `✅ Réservation Confirmée - ${details.apartment_name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #166534;">Félicitations ${name} !</h2>
+          <p>Votre réservation pour <strong>${details.apartment_name}</strong> est confirmée.</p>
+          <p><strong>Dates :</strong> Du ${details.start_date} au ${details.end_date}</p>
+          <p><strong>Prix :</strong> ${details.total_price} €</p>
+          <br>
+          <p>📄 <a href="${contractUrl}">Télécharger votre contrat</a></p>
+          <p>À très bientôt !</p>
+        </div>
+      `
+    });
+
+    if (error) throw error;
+
+    console.log("✅ Email CLIENT envoyé via Resend");
+    console.log("========================================\n");
+    
+    return result;
+    
+  } catch (err) {
+    console.error("❌ Erreur:", err.message);
+    throw err;
+  }
+};
+
+// 3. Mail de demande reçue au CLIENT
+exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetails, pdfUrl) => {
+  console.log("\n📧 ========== DEMANDE REÇUE CLIENT ==========");
+  
+  try {
+    const { data: result, error } = await resend.emails.send({
+      from: 'Loc Montagne <onboarding@resend.dev>',
+      to: clientEmail,
+      subject: `⏳ Demande reçue - ${bookingDetails.apartment_name}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px;">
+          <h1 style="color: #2563EB;">Bonjour ${clientName},</h1>
+          <p>Nous avons bien reçu votre demande pour <strong>${bookingDetails.apartment_name}</strong>.</p>
+          
+          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Récapitulatif :</h3>
+            <p>📅 <strong>Du :</strong> ${bookingDetails.start_date}</p>
+            <p>📅 <strong>Au :</strong> ${bookingDetails.end_date}</p>
+            <p>💰 <strong>Prix :</strong> ${bookingDetails.total_price} €</p>
+          </div>
+
+          <p>Le propriétaire va étudier votre demande rapidement.</p>
+          
+          <p style="text-align: center; margin: 30px 0;">
+            <a href="${pdfUrl}" style="background: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              📄 Télécharger le récapitulatif
+            </a>
+          </p>
+
+          <p>Vous recevrez un email dès confirmation.</p>
+          <br>
+          <p>À très vite !</p>
+        </div>
+      `
+    });
+
+    if (error) throw error;
+
+    console.log("✅ Email DEMANDE envoyé via Resend");
+    console.log("========================================\n");
+    
+    return result;
+    
+  } catch (err) {
+    console.error("❌ Erreur:", err.message);
+    throw err;
+  }
+};
+
+// 4. Mail de contact
+exports.sendContactMessage = async (name, email, message) => {
+  const { data: result, error } = await resend.emails.send({
+    from: 'Contact Site <onboarding@resend.dev>',
+    to: process.env.EMAIL_PROPRIO,
+    replyTo: email,
+    subject: `📩 Nouveau message de ${name}`,
+    html: `
+      <div style="font-family: Arial, sans-serif;">
+        <h3>Nouveau message depuis le site</h3>
+        <p><strong>Nom :</strong> ${name}</p>
+        <p><strong>Email :</strong> ${email}</p>
+        <hr>
+        <p><strong>Message :</strong></p>
+        <p style="background: #f9f9f9; padding: 15px; border-left: 3px solid #2563EB;">
+          ${message}
+        </p>
+      </div>
+    `
+  });
+
+  if (error) throw error;
+  return result;
+};
+
+// 5. Mail de refus
+exports.sendBookingRejectedEmail = async (clientEmail, clientName, apartmentName) => {
+  const { data: result, error } = await resend.emails.send({
+    from: 'Loc Montagne <onboarding@resend.dev>',
+    to: clientEmail,
+    subject: `❌ Mise à jour - ${apartmentName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <h2>Bonjour ${clientName},</h2>
+        <p>Votre demande pour <strong>${apartmentName}</strong> n'a pas pu être retenue.</p>
+        <p>Nous espérons vous accueillir une prochaine fois !</p>
+      </div>
+    `
+  });
+
+  if (error) throw error;
+  return result;
+};
+
+// 6. Mail d'arrivée
+exports.sendArrivedEmail = async (clientEmail, clientName, apartmentName, custom_arrival_message) => {
+  const { data: result, error } = await resend.emails.send({
+    from: 'Loc Montagne <onboarding@resend.dev>',
+    to: clientEmail,
+    subject: `📍 Informations pour votre arrivée - ${apartmentName}`,
+    html: `<div style="font-family: Arial, sans-serif;">${custom_arrival_message}</div>`
+  });
+
+  if (error) throw error;
+  return result;
+};
+/*
+```
+
+5. **Variables sur Render :**
+```
+RESEND_API_KEY=re_votre_clé_api_resend
+EMAIL_PROPRIO=votre-email@gmail.com */
