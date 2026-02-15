@@ -2,7 +2,7 @@
 const nodemailer = require('nodemailer');
 const { format } = require("date-fns");
 const { fr } = require("date-fns/locale");
-
+/*
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -10,8 +10,16 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+*/
 
-/*
+
+console.log("🔧 Configuration SMTP OVH:");
+console.log("   - Host:", process.env.EMAIL_HOST);
+console.log("   - Port:", process.env.EMAIL_PORT);
+
+
+
+
 console.log("   - User:", process.env.EMAIL_USER ? "Défini ✅" : "MANQUANT ❌");
 console.log("   - Pass:", process.env.EMAIL_PASS ? "Défini ✅" : "MANQUANT ❌");
 const transporter = nodemailer.createTransport({
@@ -22,7 +30,7 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-})*/
+})
 transporter.verify(function (error, success) {
   if (error) {
     console.error('❌ ERREUR CRITIQUE SMTP :', error);
