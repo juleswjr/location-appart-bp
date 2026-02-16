@@ -7,7 +7,7 @@ const initScheduledJobs = () => {
 
   // Tâche planifiée : Tous les jours à 09h00
   // Pour tester rapidement, tu peux mettre '* * * * *' (chaque minute), mais remets '0 9 * * *' après !
-  cron.schedule('0 10 * * *', async () => {
+  cron.schedule('12 11 * * *', async () => {
 
     console.log("🔄 [CRON] Vérification quotidienne des emails...");
     
