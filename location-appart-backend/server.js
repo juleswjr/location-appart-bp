@@ -21,7 +21,8 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000',
   'https://location-appart-bp-7t6t.vercel.app', // Ton site Vercel
-  'https://www.locmontagne.fr',     // Ton futur domaine (au cas où)
+  'https://mybelleplagne.fr', // ✅ Ajoutez votre domaine
+  'https://www.mybelleplagne.fr',     // Ton futur domaine (au cas où)
   'https://location-appart-bp-api.onrender.com'
 ];
 
