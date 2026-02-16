@@ -39,7 +39,7 @@ export default async function Home() {
         
         {/* 1. L'IMAGE DE FOND (Optimisée par Next.js) */}
         <Image
-          src="/images/IMG_5458.jpg" // 👈 Mets le bon chemin vers ton image ici
+          src="/images/IMG_54581.jpg" // 👈 Mets le bon chemin vers ton image ici
           alt="Vue de Belle Plagne"
           fill // Remplit tout le conteneur parent
           className="object-cover z-0 pointer-events-none" // S'assure que l'image couvre tout sans être déformée
