@@ -136,8 +136,15 @@ export default async function ApartmentPage({ params }) {
               </div>
 
               {/* Description */}
-              <div className="prose prose-lg text-gray-600 leading-relaxed max-w-none">
-                <p>{apartment.description}</p>
+              <div className="text-gray-600">
+                {apartment.description.split('\n').map((line, index) => (
+                  // On n'affiche la ligne que si elle n'est pas vide
+                  line.trim() !== "" && (
+                    <p key={index} className="mb-4">
+                      {line}
+                    </p>
+                  )
+                ))}
               </div>
             </section>
 
