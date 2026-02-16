@@ -1,8 +1,9 @@
 // src/services/emailService.js
-/*const nodemailer = require('nodemailer');
+/*
+const nodemailer = require('nodemailer');
 const { format } = require("date-fns");
 const { fr } = require("date-fns/locale");
-/*
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -13,20 +14,6 @@ const transporter = nodemailer.createTransport({
 
 
 
-console.log("🔧 Configuration SMTP OVH:");
-console.log("   - Host:", process.env.EMAIL_HOST);
-console.log("   - Port:", process.env.EMAIL_PORT);
-console.log("   - User:", process.env.EMAIL_USER ? "Défini ✅" : "MANQUANT ❌");
-console.log("   - Pass:", process.env.EMAIL_PASS ? "Défini ✅" : "MANQUANT ❌");
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST||'smtp.gmail.com',
-  port: parseInt(process.env.EMAIL_PORT)|| 587, // Force 465
-  secure: process.env.EMAIL_SECURE||false, // Vrai pour le port 465
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-})
 transporter.verify(function (error, success) {
   if (error) {
     console.error('❌ ERREUR CRITIQUE SMTP :', error);
@@ -186,8 +173,51 @@ exports.sendArrivedEmail = async (clientEmail, clientName, apartmentName,custom_
   };
   return transporter.sendMail(mailOptions);
 };
+
+exports.sendDepartureEmail = async (clientEmail, apartmentName, messageHtml) => {
+  console.log(`📤 Envoi mail DÉPART à ${clientEmail}...`);
+  
+  const mailOptions = {
+    from: `"Loc'Montagne" <${process.env.EMAIL_USER}>`,
+    to: clientEmail,
+    subject: `👋 Départ demain - ${apartmentName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        ${messageHtml}
+        <br>
+        <p style="font-size: 12px; color: gray; margin-top: 20px;">Ceci est un email automatique.</p>
+      </div>
+    `
+  };
+  
+  return transporter.sendMail(mailOptions);
+};
+exports.sendParkingEmail = async (clientEmail, apartmentName, messageHtml) => {
+  console.log(`📤 Envoi mail parking à ${clientEmail}...`);
+  
+  const mailOptions = {
+    from: `"Loc'Montagne" <${process.env.EMAIL_USER}>`,
+    to: clientEmail,
+    subject: `🅿️ Votre accès Parking - ${apartmentName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        ${messageHtml}
+        <br>
+        <p style="font-size: 12px; color: gray; margin-top: 20px;">Ceci est un email automatique.</p>
+      </div>
+    `
+  };
+  
+  return transporter.sendMail(mailOptions);
+};
+
 */
+
+
 // src/services/emailService.js
+
+
+
 const { Resend } = require('resend');
 
 console.log("\n========================================");
@@ -195,6 +225,7 @@ console.log("🔧 CONFIGURATION RESEND");
 console.log("========================================");
 console.log("   API Key:", process.env.RESEND_API_KEY ? "✅ Défini" : "❌ NON DÉFINI");
 console.log("   Proprio:", process.env.EMAIL_PROPRIO || "❌ NON DÉFINI");
+console.log("   Email From:", process.env.EMAIL_FROM || "noreply@mybelleplagne.fr");
 console.log("========================================\n");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -205,7 +236,7 @@ exports.sendNewBookingNotification = async (data) => {
   
   try {
     const { data: email, error } = await resend.emails.send({
-      from: 'Loc Montagne <onboarding@resend.dev>', // Email par défaut Resend
+      from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,// Email par défaut Resend
       to: process.env.EMAIL_PROPRIO,
       subject: `🔔 Nouvelle demande : ${data.apartment_name}`,
       html: `
@@ -245,7 +276,7 @@ exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
   
   try {
     const { data: result, error } = await resend.emails.send({
-      from: 'Loc Montagne <onboarding@resend.dev>',
+      from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
       to: email,
       subject: `✅ Réservation Confirmée - ${details.apartment_name}`,
       html: `
@@ -280,7 +311,7 @@ exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetail
   
   try {
     const { data: result, error } = await resend.emails.send({
-      from: 'Loc Montagne <onboarding@resend.dev>',
+      from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
       to: clientEmail,
       subject: `⏳ Demande reçue - ${bookingDetails.apartment_name}`,
       html: `
@@ -326,7 +357,7 @@ exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetail
 // 4. Mail de contact
 exports.sendContactMessage = async (name, email, message) => {
   const { data: result, error } = await resend.emails.send({
-    from: 'Contact Site <onboarding@resend.dev>',
+    from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
     to: process.env.EMAIL_PROPRIO,
     replyTo: email,
     subject: `📩 Nouveau message de ${name}`,
@@ -351,7 +382,7 @@ exports.sendContactMessage = async (name, email, message) => {
 // 5. Mail de refus
 exports.sendBookingRejectedEmail = async (clientEmail, clientName, apartmentName) => {
   const { data: result, error } = await resend.emails.send({
-    from: 'Loc Montagne <onboarding@resend.dev>',
+    from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
     to: clientEmail,
     subject: `❌ Mise à jour - ${apartmentName}`,
     html: `
@@ -370,7 +401,7 @@ exports.sendBookingRejectedEmail = async (clientEmail, clientName, apartmentName
 // 6. Mail d'arrivée
 exports.sendArrivedEmail = async (clientEmail, clientName, apartmentName, custom_arrival_message) => {
   const { data: result, error } = await resend.emails.send({
-    from: 'Loc Montagne <onboarding@resend.dev>',
+    from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
     to: clientEmail,
     subject: `📍 Informations pour votre arrivée - ${apartmentName}`,
     html: `<div style="font-family: Arial, sans-serif;">${custom_arrival_message}</div>`
@@ -379,7 +410,58 @@ exports.sendArrivedEmail = async (clientEmail, clientName, apartmentName, custom
   if (error) throw error;
   return result;
 };
+
+exports.sendDepartureEmail = async (clientEmail, apartmentName, custom_departure_message) =>{
+    const { data: result, error } = await resend.emails.send({
+    from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
+    to: clientEmail,
+    subject: `Informations pour votre départ - ${apartmentName}`,
+    html: `<div style="font-family: Arial, sans-serif;">${custom_departure_message}</div>`
+  });
+
+  if (error) throw error;
+  return result;
+};
+
+exports.sendDepartureEmail = async (clientEmail, apartmentName, messageHtml) => {
+  console.log(`📤 Envoi mail DÉPART à ${clientEmail}...`);
+  
+  const mailOptions = {
+    from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
+    to: clientEmail,
+    subject: `👋 Départ demain - ${apartmentName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        ${messageHtml}
+        <br>
+        <p style="font-size: 12px; color: gray; margin-top: 20px;">Ceci est un email automatique.</p>
+      </div>
+    `
+  };
+  
+  return transporter.sendMail(mailOptions);
+};
+exports.sendParkingEmail = async (clientEmail, apartmentName, messageHtml) => {
+  console.log(`📤 Envoi mail parking à ${clientEmail}...`);
+  
+  const mailOptions = {
+    from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
+    to: clientEmail,
+    subject: `🅿️ Votre accès Parking - ${apartmentName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        ${messageHtml}
+        <br>
+        <p style="font-size: 12px; color: gray; margin-top: 20px;">Ceci est un email automatique.</p>
+      </div>
+    `
+  };
+  
+  return transporter.sendMail(mailOptions);
+};
+
 /*
+
 ```
 
 5. **Variables sur Render :**

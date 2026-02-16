@@ -278,14 +278,68 @@ exports.confirmBooking = async (req, res) => {
         contract_url: pdfUrl
       })
       .eq('id', id);
+      
+
+
 
     if (updateError) throw updateError;
+
+    console.log("⚔️ Recherche des conflits à annuler...");
+
+    // On cherche les réservations :
+    // - Pour le MÊME appartement
+    // - Qui sont encore "pending" (en attente)
+    // - Qui ne sont PAS la réservation actuelle (id != id)
+    // - Et dont les dates se chevauchent
+    const { data: conflicts } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('apartment_id', booking.apartment_id)
+      .eq('status', 'pending')
+      .neq('id', id) // On n'annule pas celle qu'on vient de valider !
+      // Logique de chevauchement de dates :
+      // (StartA < EndB) ET (EndA > StartB)
+      .lt('start_date', booking.end_date) 
+      .gt('end_date', booking.start_date);
+
+    if (conflicts && conflicts.length > 0) {
+      console.log(`🚫 ${conflicts.length} réservation(s) en conflit trouvée(s). Refus automatique...`);
+
+      for (const conflict of conflicts) {
+        // A. On passe le statut en "rejected" dans la BDD
+        await supabase
+          .from('bookings')
+          .update({ status: 'rejected' })
+          .eq('id', conflict.id);
+
+        // B. On envoie un mail de refus gentil au client
+        // (Assure-toi que cette fonction existe bien dans emailService.js, tu me l'as montrée avant)
+        try {
+            await emailService.sendBookingRejectedEmail(
+                conflict.customer_email, 
+                conflict.customer_name, 
+                booking.apartments.name
+            );
+            console.log(`   ❌ Conflit refusé : ${conflict.customer_name}`);
+        } catch (mailError) {
+            console.error(`   ⚠️ Erreur envoi mail refus pour ${conflict.customer_name}`, mailError);
+        }
+      }
+    } else {
+        console.log("✅ Aucun conflit détecté.");
+    }
+
 
     res.status(200).json({ 
       message: "Réservation confirmée, contrat généré et envoyé !", 
       pdfUrl,
       price: officialPrice
     });
+
+    
+   
+
+
 
   } catch (error) {
     console.error("❌ Erreur lors de la confirmation :", error);

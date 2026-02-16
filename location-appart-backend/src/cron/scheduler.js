@@ -1,80 +1,151 @@
 const cron = require('node-cron');
-const supabase = require('../config/supabaseClient'); // Ton client supabase
+const supabase = require('../config/supabaseClient'); 
 const emailService = require('../services/emailService');
 
-// Fonction utilitaire pour calculer "Demain" (sans les heures)
-const getTomorrowDate = () => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  return tomorrow.toISOString().split('T')[0]; // Renvoie format "YYYY-MM-DD"
-};
-
 const initScheduledJobs = () => {
-  console.log(' Système de planification des emails démarré...');
+  console.log('⏰ Système de planification des emails (Cron) activé.');
 
-  // Tâche planifiée : Tous les jours à 09h00 du matin
-  // La syntaxe cron : "0 9 * * *" (Minutes Heures Jour Mois Semaine)
+  // Tâche planifiée : Tous les jours à 09h00
+  // Pour tester rapidement, tu peux mettre '* * * * *' (chaque minute), mais remets '0 9 * * *' après !
   cron.schedule('0 10 * * *', async () => {
-    console.log("🔄 Lancement de la vérification quotidienne des emails...");
+
+    console.log("🔄 [CRON] Vérification quotidienne des emails...");
     
-    const today = new Date().toISOString().split('T')[0];   
+    // On calcule les dates clés
+    const today = new Date().toISOString().split('T')[0]; // ex: "2026-02-16"
+    
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0]; 
+    const tomorrowStr = tomorrow.toISOString().split('T')[0]; // ex: "2026-02-17"
+
     try {
-      // --- 1. GESTION DES ARRIVÉES (Check-in) ---
-      // On cherche les résas confirmées qui commencent DEMAIN
-      const { data: arrivals } = await supabase
+      // ============================================================
+      // 1. GESTION DES ARRIVÉES (Check-in)
+      // ============================================================
+      // Logique :
+      // - Soit la date d'envoi personnalisée est AUJOURD'HUI
+      // - Soit il n'y a pas de date perso, et l'arrivée est DEMAIN
+      const { data: arrivals, error: errArrivals } = await supabase
         .from('bookings')
         .select('*, apartments(name, arrival_instruction)')
         .eq('status', 'confirmed')
+        .eq('sent_arrival_email', false) // On ne renvoie jamais deux fois
         .or(`arrival_mail_date.eq.${today},and(arrival_mail_date.is.null,start_date.eq.${tomorrowStr})`);
-      if (arrivals && arrivals.length > 0) {
-        arrivals.forEach(async (booking) => {
-          let rawMessage = booking.custom_arrival_message || booking.apartments.arrival_instruction;
-          if (rawMessage) {
-            // On remplace les variables {{name}} par le vrai nom
-            const messagePersonnalise = booking.apartments.arrival_instruction
-              .replace('{{name}}', booking.customer_name)
-              .replace('{{date}}', new Date(booking.start_date).toLocaleDateString());
 
+      if (errArrivals) console.error("❌ Erreur récupération arrivées:", errArrivals);
+
+      if (arrivals && arrivals.length > 0) {
+        console.log(`📥 ${arrivals.length} arrivées à traiter.`);
+
+        for (const booking of arrivals) {
+          try {
+            // 1. Choix du message
+            let rawMessage = booking.custom_arrival_message || booking.apartments.arrival_instruction || "Bienvenue !";
+
+            // 2. Remplacement des variables
+            const finalMessage = rawMessage
+              .replace(/{{name}}/g, booking.customer_name)
+              .replace(/{{date}}/g, new Date(booking.start_date).toLocaleDateString('fr-FR'));
+
+            // 3. Envoi
             await emailService.sendArrivedEmail(
               booking.customer_email,   
               booking.customer_name,    
               booking.apartments.name, 
-              messagePersonnalise
+              finalMessage
             );
-            console.log(`✅ Mail arrivée envoyé à ${booking.customer_name}`);
+
+            // 4. Validation
+            await supabase.from('bookings').update({ sent_arrival_email: true }).eq('id', booking.id);
+            console.log(`   ✅ Mail arrivée envoyé à ${booking.customer_name}`);
+
+          } catch (err) {
+            console.error(`   ❌ Erreur envoi arrivée pour ${booking.customer_name}:`, err.message);
           }
-        });
+        }
       }
 
-      // --- 2. GESTION DES DÉPARTS (Check-out) ---
-      // On cherche les résas confirmées qui finissent DEMAIN
-      const { data: departures } = await supabase
+      // ============================================================
+      // 2. GESTION DES DÉPARTS (Check-out)
+      // ============================================================
+      // Logique :
+      // - Soit la date d'envoi personnalisée est AUJOURD'HUI
+      // - Soit il n'y a pas de date perso, et le départ est DEMAIN
+      const { data: departures, error: errDepartures } = await supabase
         .from('bookings')
         .select('*, apartments(name, departure_instruction)')
         .eq('status', 'confirmed')
+        .eq('sent_departure_email', false)
         .or(`departure_mail_date.eq.${today},and(departure_mail_date.is.null,end_date.eq.${tomorrowStr})`);
-      if (departures && departures.length > 0) {
-        departures.forEach(async (booking) => {
-          let rawMessage = booking.custom_departure_message || booking.apartments.departure_instruction;
-          if (rawMessage) {
-            const messagePersonnalise = booking.apartments.departure_instruction
-              .replace('{{name}}', booking.customer_name);
 
-            await emailService.sendAutomaticEmail(
+      if (errDepartures) console.error("❌ Erreur récupération départs:", errDepartures);
+
+      if (departures && departures.length > 0) {
+        console.log(`📤 ${departures.length} départs à traiter.`);
+
+        for (const booking of departures) {
+          try {
+            // 1. Choix du message
+            let rawMessage = booking.custom_departure_message || booking.apartments.departure_instruction || "Bon retour !";
+
+            // 2. Remplacement des variables
+            const finalMessage = rawMessage
+              .replace(/{{name}}/g, booking.customer_name);
+
+            // 3. Envoi
+            await emailService.sendDepartureEmail(
               booking.customer_email,
-              `Votre départ demain - ${booking.apartments.name}`,
-              messagePersonnalise
+              booking.apartments.name,
+              finalMessage
             );
-            console.log(`✅ Mail départ envoyé à ${booking.customer_name}`);
+
+            // 4. Validation
+            await supabase.from('bookings').update({ sent_departure_email: true }).eq('id', booking.id);
+            console.log(`   ✅ Mail départ envoyé à ${booking.customer_name}`);
+
+          } catch (err) {
+            console.error(`   ❌ Erreur envoi départ pour ${booking.customer_name}:`, err.message);
           }
-        });
+        }
       }
 
+    const { data: parkingBookings, error: errParking } = await supabase
+        .from('bookings')
+        .select('*, apartments(name, parking_instruction)')
+        .eq('status', 'confirmed')
+        .eq('has_parking', true)             // 👈 Seulement si parking choisi
+        .eq('sent_parking_email', false)     // 👈 Pas encore envoyé
+        .or(`arrival_mail_date.eq.${today},and(arrival_mail_date.is.null,start_date.eq.${tomorrowStr})`); // Même timing que l'arrivée
+
+      if (errParking) console.error("❌ Erreur récupération Parking:", errParking);
+
+      if (parkingBookings && parkingBookings.length > 0) {
+        console.log(`🅿️ ${parkingBookings.length} mails parking à envoyer.`);
+
+        for (const booking of parkingBookings) {
+          try {
+            // On récupère l'instruction de l'appartement (ou un texte par défaut)
+            const instructions = booking.apartments.parking_instruction || "Garez-vous sur la place réservée à l'appartement.";
+
+            await emailService.sendParkingEmail(
+              booking.customer_email,
+              booking.apartments.name,
+              instructions
+            );
+
+            // On coche la case
+            await supabase.from('bookings').update({ sent_parking_email: true }).eq('id', booking.id);
+            console.log(`   ✅ Mail Parking envoyé à ${booking.customer_name}`);
+
+          } catch (err) {
+            console.error(`   ❌ Erreur envoi Parking pour ${booking.customer_name}:`, err.message);
+          }
+        }
+      }
+
+
     } catch (error) {
-      console.error("❌ Erreur dans le Cron Job :", error);
+      console.error("❌ Erreur CRITIQUE Cron Job :", error);
     }
   });
 };

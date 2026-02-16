@@ -70,7 +70,7 @@ export default async function Home() {
       </div>
 
       <footer className="bg-gray-900 text-gray-400 py-8 text-center">
-        <p>© 2024 Location Ski - Tous droits réservés</p>
+        <p>© 2026 MyBellePlagne - Tous droits réservés</p>
       </footer>
     </main>
   );
