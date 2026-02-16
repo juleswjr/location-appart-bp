@@ -8,9 +8,9 @@ export default function ContactSection() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStatus("loading");
-
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
     try {
-      const res = await fetch( process.env.NEXT_PUBLIC_API_URL/api/contact || "http://localhost:5000/api/contact", {
+      const res = await fetch(`${apiUrl}/api/contact`, { // 👈 Utilisation de l'URL dynamique
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
