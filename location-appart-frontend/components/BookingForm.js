@@ -288,7 +288,7 @@ export default function BookingForm({ apartment }) {
       <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
         <label className="flex items-start space-x-3 cursor-pointer">
           <input type="checkbox" className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300" checked={hasParking} onChange={(e) => setHasParking(e.target.checked)} />
-          <div className="flex flex-col"><span className="font-bold text-gray-900">Option Parking privé</span><span className="text-sm text-gray-600">Garage sécurisé en sous-sol (+80€ / semaine)</span></div>
+          <div className="flex flex-col"><span className="font-bold text-gray-900">Option Parking</span><span className="text-sm text-gray-600">+80€ / semaine</span></div>
         </label>
       </div>
 
