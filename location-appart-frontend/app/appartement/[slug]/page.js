@@ -124,7 +124,7 @@ export default async function ApartmentPage({ params }) {
                 {/* Rotation */}
                 <div className="flex items-center gap-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm">
                   <div className="p-3 bg-white rounded-full text-indigo-600 shadow-sm">
-                    <CalendarClock size={24} strokeWidth={2.5} />
+                    <CableCar size={24} strokeWidth={2.5} />
                   </div>
                   <div>
                     <p className="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-0.5">Situation</p>
