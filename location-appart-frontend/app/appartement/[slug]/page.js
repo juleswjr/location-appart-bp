@@ -3,7 +3,7 @@ import BookingForm from '@/components/BookingForm'; // Assure-toi que le chemin 
 import ApartmentGallery from "@/components/ApartmentGallery"; // Ton nouveau composant galerie
 import { 
   Check, Users, CalendarClock, 
-  Ban, CigaretteOff, Cat, Accessibility 
+  Ban, CigaretteOff, Cat, Accessibility
 } from "lucide-react";
 export const dynamic = "force-dynamic";
 // Fonction pour récupérer l'appartement via l'API (Server Side)
@@ -118,6 +118,18 @@ export default async function ApartmentPage({ params }) {
                         ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"][apartment.changeover_day] 
                         || "Samedi"
                       }
+                    </p>
+                  </div>
+                </div>
+                {/* Rotation */}
+                <div className="flex items-center gap-4 p-4 bg-indigo-50 rounded-xl border border-indigo-100 shadow-sm">
+                  <div className="p-3 bg-white rounded-full text-indigo-600 shadow-sm">
+                    <CalendarClock size={24} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-indigo-400 font-bold uppercase tracking-wider mb-0.5">Situation</p>
+                    <p className="text-lg font-bold text-indigo-900">
+                      Ski aux pieds
                     </p>
                   </div>
                 </div>
