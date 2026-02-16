@@ -3,7 +3,7 @@ import BookingForm from '@/components/BookingForm'; // Assure-toi que le chemin 
 import ApartmentGallery from "@/components/ApartmentGallery"; // Ton nouveau composant galerie
 import { 
   Check, Users, CalendarClock, 
-  Ban, CigaretteOff, Cat, Accessibility
+  Ban, CigaretteOff, Cat, Accessibility, CableCar
 } from "lucide-react";
 export const dynamic = "force-dynamic";
 // Fonction pour récupérer l'appartement via l'API (Server Side)
