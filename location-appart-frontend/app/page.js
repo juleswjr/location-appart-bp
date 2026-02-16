@@ -4,6 +4,7 @@ import ContactSection from '../components/ContactSection';
 import Navbar from '../components/Navbar';
 import ReviewsSection from '../components/ReviewsSection';
 export const dynamic = "force-dynamic";
+import Image from "next/image";
 async function getApartments() {
   try {
     // On utilise la variable d'environnement OU localhost par défaut
@@ -33,12 +34,33 @@ export default async function Home() {
       {/* 2. LA BARRE DE NAVIGATION (Tout en haut) */}
       <Navbar />
 
-      {/* HERO (En-tête) */}
-      <div className="bg-blue-900 text-white py-32 text-center px-4">
-        <h1 className="text-4xl md:text-5xl font-bold mb-4 mt-10">
-          Location Belle Plagne
-        </h1>
-        <p className="text-xl opacity-90">Vos vacances commencent ici.</p>
+      {/* HERO (En-tête avec Image de fond) */}
+      <div className="relative h-[60vh] min-h-[500px] flex items-center justify-center text-white text-center px-4">
+        
+        {/* 1. L'IMAGE DE FOND (Optimisée par Next.js) */}
+        <Image
+          src="/images/IMG_5458.jpg" // 👈 Mets le bon chemin vers ton image ici
+          alt="Vue de Belle Plagne"
+          fill // Remplit tout le conteneur parent
+          className="object-cover z-0 pointer-events-none" // S'assure que l'image couvre tout sans être déformée
+          priority // Charge l'image en priorité (important pour le LCP)
+        />
+
+        {/* 2. LE FILTRE SOMBRE (Overlay) */}
+        {/* C'est crucial pour que le texte blanc reste lisible sur une photo claire */}
+        <div className="absolute inset-0 bg-blue-900/40 z-10"></div>
+        {/* Tu peux changer la couleur : bg-black/50, bg-blue-900/60, etc. */}
+
+
+        {/* 3. LE TEXTE (Au premier plan) */}
+        <div className="relative z-20 mt-10">
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">
+            Location Belle Plagne
+          </h1>
+          <p className="text-xl md:text-2xl opacity-90 drop-shadow-md">
+            Vos vacances commencent ici.
+          </p>
+        </div>
 
       </div>
 

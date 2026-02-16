@@ -28,7 +28,7 @@ export default function Navbar() {
         
         {/* Logo / Nom du site */}
         <a href="#" className={`text-xl font-bold ${scrolled ? "text-blue-900" : "text-white"}`}>
-          Location Belle Plagne
+          MyBellePlagne
         </a>
 
         {/* Menu PC */}

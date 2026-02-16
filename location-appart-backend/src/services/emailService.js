@@ -248,7 +248,7 @@ exports.sendNewBookingNotification = async (data) => {
           <p><strong>Prix total :</strong> ${data.total_price/100} €</p>
           <p><strong>Parking :</strong> ${data.has_parking}</p>
           <br>
-          <p>👉 <a href="https://votre-admin.vercel.app/admin">Accéder au dashboard</a></p>
+          <p>👉 <a href="https://www.mybelleplagne.fr/admin">Accéder au centre de contrôle</a></p>
         </div>
       `
     });
