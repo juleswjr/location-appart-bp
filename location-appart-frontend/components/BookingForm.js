@@ -225,7 +225,7 @@ export default function BookingForm({ apartment }) {
 
       {/* INFO ROTATION (Petit texte d'aide) */}
       <p className="text-sm text-gray-500 mb-4 italic">
-        📅 Départs et arrivées le <strong>{CHANGE_DAY === 0 ? "Dimanche" : "Samedi"}</strong> uniquement.
+        Départs et arrivées le <strong>{CHANGE_DAY === 0 ? "Dimanche" : "Samedi"}</strong> uniquement.
       </p>
 
       {/* DATES */}

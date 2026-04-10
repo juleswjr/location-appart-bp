@@ -173,7 +173,7 @@ export default async function ApartmentPage({ params }) {
             {apartment.restrictions && apartment.restrictions.length > 0 && (
               <div className="mb-12 bg-red-50 p-8 rounded-2xl border border-red-100">
                 <h3 className="text-xl font-bold text-red-800 mb-6 flex items-center gap-2">
-                  ⛔ À savoir (Règlement)
+                   À savoir (Règlement)
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {apartment.restrictions.map((item, index) => (
@@ -190,7 +190,7 @@ export default async function ApartmentPage({ params }) {
 
             {/* 4. SECTION LOCALISATION */}
             <section id="localisation" className="scroll-mt-32 mb-12">
-               <h3 className="text-2xl font-bold text-gray-900 mb-6">📍 Localisation</h3>
+               <h3 className="text-2xl font-bold text-gray-900 mb-6">Localisation</h3>
                <div className="bg-gray-200 rounded-xl h-96 w-full overflow-hidden shadow-sm relative border border-gray-300">
                  {apartment.map_url ? (
                    <iframe 
