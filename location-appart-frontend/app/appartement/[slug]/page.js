@@ -144,7 +144,7 @@ export default async function ApartmentPage({ params }) {
                   </div>
                 </div>
               </div>
-                      
+                
               {/* Description */}
               <div className="text-gray-600">
                 {apartment.description.split('\n').map((line, index) => (
@@ -157,7 +157,10 @@ export default async function ApartmentPage({ params }) {
                 ))}
               </div>
             </section>
-
+            {/* 6. CONTACT (Ajout de l'ID) */}
+            <div id="contact" className="scroll-mt-20">
+              <ContactSection />
+            </div>
             {/* 2. SECTION ÉQUIPEMENTS */}
             {apartment.features && apartment.features.length > 0 && (
               <section id="equipements" className="scroll-mt-32 mb-12">
