@@ -3,7 +3,7 @@ import BookingForm from '@/components/BookingForm'; // Assure-toi que le chemin 
 import ApartmentGallery from "@/components/ApartmentGallery"; // Ton nouveau composant galerie
 import { 
   Check, Users, CalendarClock, 
-  Ban, CigaretteOff, Cat, Accessibility, CableCar
+  Ban, CigaretteOff, Cat, Accessibility, CableCar,ReceiptEuro
 } from "lucide-react";
 export const dynamic = "force-dynamic";
 // Fonction pour récupérer l'appartement via l'API (Server Side)
@@ -133,8 +133,18 @@ export default async function ApartmentPage({ params }) {
                     </p>
                   </div>
                 </div>
+                {/* Prix minimum */}
+                <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100 shadow-sm">
+                  <div className="p-3 bg-white rounded-full text-blue-600 shadow-sm">
+                    <ReceiptEuro size={24} strokeWidth={2.5} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-blue-400 font-bold uppercase tracking-wider mb-0.5">Prix</p>
+                    <p className="text-lg font-bold text-blue-900"> A partir de {apartment.price_per_night/100} € / semaine</p>
+                  </div>
+                </div>
               </div>
-
+                      
               {/* Description */}
               <div className="text-gray-600">
                 {apartment.description.split('\n').map((line, index) => (
