@@ -74,7 +74,12 @@ export default async function Home() {
           Au cœur de la station de Belle Plagne à 2050 mètres d'altitude sur le domaine skiable Paradiski, 
           vous bénéficierez d'appartements chaleureux, bien équipés, avec toutes les commoditées à proximité. 
           Vous serez ski aux pieds, au bord des pistes. Pour vos enfants les cours ESF seront à proximité immédiate 
-          tout comme les commerces, les restaurants et les autres activités (spa, bowling...).
+          tout comme les commerces, les restaurants et les autres activités (spa, bowling...). 
+          
+           
+        </p>
+        <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+          
           Vos vacances commencent ici.
            
         </p>
