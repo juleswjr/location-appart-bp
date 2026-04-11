@@ -64,6 +64,22 @@ export default async function Home() {
 
       </div>
 
+      {/* SECTION BIENVENUE */}
+      <div id="bienvenue" className="max-w-3xl mx-auto px-4 py-16 text-center scroll-mt-24">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
+          Bienvenue 
+        </h2>
+        
+        <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+          Au cœur de la station de Belle Plagne à 2050 mètres d'altitude sur le domaine skiable Paradiski, 
+          vous bénéficierez d'appartements chaleureux, bien équipés, avec toutes les commoditées à proximité. 
+          Vous serez ski aux pieds, au bord des pistes pour vos enfants les cours ESF sont à proximité immédiate 
+          tout comme les commerces, les restaurants et les autres activités (spa, bowling...).
+          Il n'y a plus qu'à poser vos bagages. 
+        </p>
+      </div>
+
+
       {/* 3. LISTE APPARTEMENTS (Ajout de l'ID pour le menu) */}
       {/* 'scroll-mt-24' sert à laisser de la place pour le menu quand on arrive dessus */}
       <div id="appartements" className="max-w-6xl mx-auto px-4 py-16 scroll-mt-24">
@@ -78,8 +94,9 @@ export default async function Home() {
         </div>
       </div>
 
-      {/* 4. Review section*/}
-      <ReviewsSection />
+      {/* 4. Review section <ReviewsSection /> */}
+
+      
 
       {/* 5. LOCALISATION (Ajout de l'ID) */}
       <div id="localisation" className="scroll-mt-20">
