@@ -279,7 +279,7 @@ export default function BookingForm({ apartment }) {
         </div>
       )}
       {/* INFOS CLIENT */}
-      <div className="space-y-4">
+      <div className="space-y-4 mt-8">
         <div><label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label><input type="text" name="customer_name" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_name} /></div>
         <div><label className="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" name="customer_email" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_email} /></div>
         <div className="grid grid-cols-2 gap-4">
