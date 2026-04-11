@@ -44,7 +44,7 @@ export default function ApartmentGallery({ photos, name }) {
         
         {/* Grande photo */}
         <div className="md:col-span-2 md:row-span-2 relative group cursor-pointer" onClick={() => openLightbox(0)}>
-          <Image src={photos[0]} alt={name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+          <img src={photos[0]} alt={name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
           <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
         </div>
 
@@ -52,7 +52,7 @@ export default function ApartmentGallery({ photos, name }) {
         {[1, 2, 3, 4].map((idx) => (
           photos[idx] && (
             <div key={idx} className="hidden md:block relative cursor-pointer group" onClick={() => openLightbox(idx)}>
-              <Image src={photos[idx]} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <img src={photos[idx]} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
             </div>
           )
         ))}
@@ -72,7 +72,7 @@ export default function ApartmentGallery({ photos, name }) {
           </button>
 
           <div className="relative max-w-5xl max-h-[85vh] w-full h-full flex items-center justify-center">
-            <Image src={photos[currentPhotoIndex]} alt={`Vue ${currentPhotoIndex + 1}`} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
+            <img src={photos[currentPhotoIndex]} alt={`Vue ${currentPhotoIndex + 1}`} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" />
             <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 text-white text-lg font-medium">
               {currentPhotoIndex + 1} / {photos.length}
             </div>
