@@ -1,0 +1,185 @@
+agate 431
+{
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/agate431/IMG_6130.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/agate431/IMG_4102.jpg", 
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/agate431/IMG_4094.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/agate431/IMG_4100.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/agate431/IMG_1766.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/agate431/IMG_1767.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/agate431/IMG_1761.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/agate431/IMG_3272.jpg"
+
+}
+
+src="https://www.google.com/maps/embed?pb=!1m24!1m12!1m3!1d1565.2920233994835!2d6.706766504638753!3d45.50722588827067!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m9!3e3!4m3!3m2!1d45.506870199999994!2d6.706652399999999!4m3!3m2!1d45.506865999999995!2d6.7066403999999995!5e0!3m2!1sfr!2sfr!4v1768755116848!5m2!1sfr!2sfr"
+
+prix :
+b176983c-9cec-4926-bc71-bff870a75166
+20/12/2026 1200
+27/12/2026 1680
+
+03/01/2027 900
+10/01/2027 850
+17/01/2027 850
+24/01/2027 850
+31/01/2027 1100
+07/02/2027 1400
+14/02/2027 1560
+21/02/2027 1560
+28/02/2027 1400
+07/03/2027 900
+14/03/2027 850
+21/03/2027 850
+28/03/2027 850
+04/04/2027 850
+11/04/2027 800
+18/04/2027 800
+
+Desc
+Bel appartement au cœur de la station de Belle Plagne à 2050 m d’altitude sur le domaine Paradiski.
+Situé dans la résidence AGATE à proximité immédiate de l’ESF, des pistes de skis et de toutes commodités (supermarché, magasins de sport, restaurants, SPA, bowling). Appartement très lumineux, bien orienté avec salon, salle à manger, cuisine équipée, SDB WC séparés. Casiers à skis, balcon, parking couvert à proximité.
+Si vous le souhaitez, une option de location de linge et de réservation de parking est disponible.
+
+
+
+
+beryl 746
+{"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/746/IMG_5458.jpg", 
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/746/IMG_6115.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/746/IMG_5657.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/746/IMG_6116.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/746/IMG_6118.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/746/IMG_0975.jpg",
+ "https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/746/IMG_0971.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/746/IMG_0970.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/746/IMG_0988.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/746/IMG_1397.jpg"
+
+
+
+
+
+}
+
+src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d2188.804083689572!2d6.7066933527197845!3d45.50756469420594!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x47897a4fee261a53%3A0xca2ba272ff9f4226!2s73%20belle%20plagne%2C%2073210%20La%20Plagne%20Tarentaise!5e0!3m2!1sfr!2sfr!4v1768754831518!5m2!1sfr!2sfr"
+
+prix :
+3cdc88a6-86ae-40f6-b144-5c7198187be0
+
+19/12/2026 920
+26/12/2026 1200
+
+02/01/2027 700
+09/01/2027 650
+16/01/2027 650
+23/01/2027 650
+30/01/2027 900
+06/02/2027 1100
+13/02/2027 1200
+20/02/2027 1200
+27/02/2027 1100
+06/03/2027 700
+13/03/2027 650
+20/03/2027 650
+27/03/2027 650
+03/04/2027 650
+10/04/2027 600
+17/04/2027 600
+
+Bel appartement au cœur de la station de Belle Plagne à 2050 m d’altitude sur le domaine Paradiski.
+Situé dans la résidence BÉRYL à proximité immédiate des pistes de skis, de l’ESF,  et de toutes commodités (supermarché, magasins de sport, restaurants, SPA, bowling).
+Studio divisible entièrement rénové avec salon salle à mangé avec TV, coin cuisine équipé avec lave-vaisselle, sdb, lave-linge.
+Casier à ski, balcon, parking couvert à proximité.
+
+Si vous le souhaiter, une option de location de linge et de réservation de parking est possible.
+
+
+
+
+
+
+
+beryl 541
+{"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/541/IMG_5700.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/541/IMG_6129.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/541/IMG_5667.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/541/IMG_6161.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/541/IMG_5663.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/541/IMG_5658.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/541/IMG_5666.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/541/IMG_5671.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/541/IMG_6126.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/541/IMG_6127.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/541/IMG_6128.jpg"
+}
+src="https://www.google.com/maps/embed?pb=!1m20!1m8!1m3!1d2188.804083689572!2d6.7066933527197845!3d45.50756469420594!3m2!1i1024!2i768!4f13.1!4m9!3e3!4m3!3m2!1d45.507161499999995!2d6.706819299999999!4m3!3m2!1d45.5071498!2d6.7068277!5e0!3m2!1sfr!2sfr!4v1768754993441!5m2!1sfr!2sfr"
+
+prix :
+7fa8798b-f0c2-4c8d-9308-9c5c50e3c7ce
+20/12/2026 1100
+27/12/2026 1400
+
+03/01/2027 800
+10/01/2027 750
+17/01/2027 750
+24/01/2027 750
+31/01/2027 1000
+07/02/2027 1300
+14/02/2027 1400
+21/02/2027 1400
+28/02/2027 1300
+07/03/2027 860
+14/03/2027 750
+21/03/2027 750
+28/03/2027 750
+04/04/2027 750
+11/04/2027 700
+18/04/2027 700
+
+Desc
+Appartement au cœur de la station de Belle Plagne à 2050 m d’altitude sur le domaine Paradiski.
+Très belle situation, superbe vue dégagée. Proche toutes commodités (ESF, magasins de sport, supermarché, restaurants, spa). Salon séjour avec possibilité de 2 lits simples, cuisine, 1 chambre séparée avec 2 lits doubles superposés. Casier à skis, balcon, parking couvert à proximité.
+Si vous le souhaitez, une option de location de linge et de réservation de parking est disponible.
+
+
+
+beryl 745
+{"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6131.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6135.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6138.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6139.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6140.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6136.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6146.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6155.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6152.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6154.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6150.jpg",
+"https://orbnjqrhknsbrkxmimxp.supabase.co/storage/v1/object/public/appartments/745/IMG_6142.jpg"
+}
+
+PRIX /
+52
+53
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+
+
+
+
+API
+
+https://location-appart-bp-api.onrender.com

@@ -75,6 +75,7 @@ export default async function Home() {
           vous bénéficierez d'appartements chaleureux, bien équipés, avec toutes les commoditées à proximité. 
           Vous serez ski aux pieds, au bord des pistes. Pour vos enfants les cours ESF seront à proximité immédiate 
           tout comme les commerces, les restaurants et les autres activités (spa, bowling...).
+          Vos vacances commencent ici.
            
         </p>
       </div>
@@ -104,7 +105,7 @@ export default async function Home() {
         <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
           Nous travaillons avec un service de conciergerie qui pourra vous accueillir sur place, vous
           proposer une location de linge de lit et de serviettes, vous aider à vous orienter dans la station 
-          (location de skis, cours ESF, etc).
+          (location de skis, cours ESF...).
            
         </p>
       </div>
