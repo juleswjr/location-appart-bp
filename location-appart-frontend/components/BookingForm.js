@@ -290,14 +290,16 @@ export default function BookingForm({ apartment }) {
         <div><label className="block text-sm font-medium text-gray-700 mb-1">Message</label><textarea name="message" rows="3" className="w-full border p-2 rounded" onChange={handleChange} value={formData.message}></textarea></div>
       </div>
 
+      
       {/* OPTION PARKING */}
+      {/*
       <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
         <label className="flex items-start space-x-3 cursor-pointer">
           <input type="checkbox" className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300" checked={hasParking} onChange={(e) => setHasParking(e.target.checked)} />
           <div className="flex flex-col"><span className="font-bold text-gray-900">Option Parking Couvert</span><span className="text-sm text-gray-600">+80€ / semaine</span></div>
         </label>
       </div>
-
+        */}
       
 
       <button type="submit" disabled={loading} className={`w-full mt-4 py-3 rounded-lg font-bold text-white transition-all ${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"}`}>
