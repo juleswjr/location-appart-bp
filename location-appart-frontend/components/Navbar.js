@@ -15,7 +15,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Nos Appartements", href: "#appartements" },
-    { name: "Avis Clients", href: "#avis" },
+    { name: "Conciergerie", href: "#conciergerie" },
     { name: "Localisation", href: "#localisation" },
     { name: "Contact", href: "#contact" },
   ];

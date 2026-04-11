@@ -95,7 +95,19 @@ export default async function Home() {
       </div>
 
       {/* 4. Review section <ReviewsSection /> */}
-
+      {/* SECTION CONCIERGERIE */}
+      <div id="conciergerie" className="max-w-3xl mx-auto px-4 py-16 text-center scroll-mt-24">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
+          Service de conciergerie 
+        </h2>
+        
+        <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+          Nous travaillons avec un service de conciergerie qui pourra vous accueillir sur place, vous
+          proposer une location de linge de lit et de serviettes, vous aider à vous orienter dans la station 
+          (location de skis, cours ESF, etc).
+           
+        </p>
+      </div>
       
 
       {/* 5. LOCALISATION (Ajout de l'ID) */}
