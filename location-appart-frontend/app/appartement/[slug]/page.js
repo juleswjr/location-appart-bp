@@ -140,7 +140,7 @@ export default async function ApartmentPage({ params }) {
                   </div>
                   <div>
                     <p className="text-xs text-blue-400 font-bold uppercase tracking-wider mb-0.5">Prix</p>
-                    <p className="text-lg font-bold text-blue-900"> A partir de {apartment.price_per_night/100} € / semaine</p>
+                    <p className="text-lg font-bold text-blue-900"> A partir de {apartment.price_per_night/100}€</p>
                   </div>
                 </div>
               </div>
