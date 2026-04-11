@@ -271,7 +271,13 @@ export default function BookingForm({ apartment }) {
           />
         </div>
       </div>
-
+      {/* AFFICHAGE DU PRIX TOTAL */}
+      {totalPrice > 0 && (
+        <div className="mt-6 p-4 bg-gray-900 rounded-lg text-white flex justify-between items-center shadow-lg">
+          <div><p className="text-gray-400 text-xs uppercase font-bold tracking-wider">Total estimé</p><p className="text-2xl font-bold">{totalPrice} €</p></div>
+          {isCalculating && <span className="text-xs text-yellow-400 animate-pulse">Calcul...</span>}
+        </div>
+      )}
       {/* INFOS CLIENT */}
       <div className="space-y-4">
         <div><label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label><input type="text" name="customer_name" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_name} /></div>
@@ -292,13 +298,7 @@ export default function BookingForm({ apartment }) {
         </label>
       </div>
 
-      {/* AFFICHAGE DU PRIX TOTAL */}
-      {totalPrice > 0 && (
-        <div className="mt-6 p-4 bg-gray-900 rounded-lg text-white flex justify-between items-center shadow-lg">
-          <div><p className="text-gray-400 text-xs uppercase font-bold tracking-wider">Total estimé</p><p className="text-2xl font-bold">{totalPrice} €</p></div>
-          {isCalculating && <span className="text-xs text-yellow-400 animate-pulse">Calcul...</span>}
-        </div>
-      )}
+      
 
       <button type="submit" disabled={loading} className={`w-full mt-4 py-3 rounded-lg font-bold text-white transition-all ${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"}`}>
         {loading ? "Envoi..." : "Envoyer ma demande"}
