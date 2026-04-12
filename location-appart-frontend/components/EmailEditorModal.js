@@ -23,7 +23,7 @@ export default function EmailEditorModal({ booking, onClose, onSave }) {
   // 2. GESTION DES DATES D'ENVOI
   // Si une date est déjà fixée en BDD, on la prend. Sinon on calcule J-1 par défaut.
   const [arrivalDate, setArrivalDate] = useState(
-    booking.arrival_mail_date || getDefaultDate(booking.start_date, -1)
+    booking.arrival_mail_date || getDefaultDate(booking.start_date, -40)
   );
 
   const [departureDate, setDepartureDate] = useState(
