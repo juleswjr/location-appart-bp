@@ -368,7 +368,16 @@ export default function AdminDashboard() {
                       </>
                     )}
                     {booking.status === 'confirmed' && (
-                       <span className="text-gray-400 text-sm italic">Mail envoyé ✅</span>
+                       <span className="text-gray-400 text-sm italic">Mail envoyé ✅
+                       <button onClick={() => handleSendContract(booking.id)}
+                          className="bg-gray-200 text-gray-800 px-3 py-1 rounded hover:bg-gray-300 text-sm"
+                          >
+                          
+                          📄 Contrat
+                        </button>
+                       
+                       </span>
+                       
                     )}
                     <button 
                       onClick={() => setEditingBooking(booking)}
