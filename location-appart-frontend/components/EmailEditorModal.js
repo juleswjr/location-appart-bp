@@ -4,9 +4,9 @@ import { useState } from "react";
 // Fonction utilitaire pour calculer une date (J-1 par défaut)
 const getDefaultDate = (dateStr, daysOffset = -1) => {
   if (!dateStr) return "";
-  const d = new Date(dateStr);
+  const d = new Date(dateStr + 'T12:00:00'); // ✅ Fix UTC
   d.setDate(d.getDate() + daysOffset);
-  return d.toISOString().split('T')[0]; // Format YYYY-MM-DD
+  return d.toISOString().split('T')[0];
 };
 
 export default function EmailEditorModal({ booking, onClose, onSave }) {
