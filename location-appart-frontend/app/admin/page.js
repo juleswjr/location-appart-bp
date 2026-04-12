@@ -175,6 +175,29 @@ export default function AdminDashboard() {
       fetchBookings(); // On remet les vraies données en cas d'erreur
     }
   };
+
+  const handleSendContract = async (id) => {
+  if (!confirm("Envoyer le contrat au propriétaire ?")) return;
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+  try {
+    const res = await fetch(`${apiUrl}/api/bookings/${id}/send-contract`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (res.ok) {
+      alert("✅ Contrat envoyé au propriétaire !");
+    } else {
+      const err = await res.json();
+      alert("Erreur : " + (err.message || "Inconnue"));
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Erreur de connexion au backend");
+  }
+};
 // Fonction pour cocher/décocher manuellement les emails
   const toggleEmailStatus = async (id, field, currentValue) => {
     try {
