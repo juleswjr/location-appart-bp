@@ -324,7 +324,10 @@ export default function AdminDashboard() {
                       <>
 
                         
-                        <button onClick={() => handleSendContract(booking.id)}>
+                        <button onClick={() => handleSendContract(booking.id)}
+                          className="bg-gray-200 text-gray-800 px-3 py-1 rounded hover:bg-gray-300 text-sm"
+                          >
+                          
                           📄 Contrat
                         </button>
                         <button 
