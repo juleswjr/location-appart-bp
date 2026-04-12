@@ -204,6 +204,24 @@ export default function AdminDashboard() {
     alert("Erreur de connexion au backend");
   }
 };
+
+const handleRatingUpdate = async (id, rating, note) => {
+  try {
+    const { error } = await supabase
+      .from('bookings')
+      .update({ owner_rating: rating, owner_note: note })
+      .eq('id', id);
+
+    if (error) throw error;
+
+    setBookings(prev => prev.map(b =>
+      b.id === id ? { ...b, owner_rating: rating, owner_note: note } : b
+    ));
+  } catch (err) {
+    console.error("❌ Erreur sauvegarde note :", err.message);
+    alert("Erreur lors de la sauvegarde.");
+  }
+};
 // Fonction pour cocher/décocher manuellement les emails
   const toggleEmailStatus = async (id, field, currentValue) => {
     try {
@@ -258,6 +276,79 @@ const getCalendarDayClass = (date, apartmentId) => {
   return '';
 };
 
+const StarRating = ({ booking, onSave }) => {
+  const [rating, setRating] = useState(booking.owner_rating || 0);
+  const [note, setNote] = useState(booking.owner_note || '');
+  const [open, setOpen] = useState(false);
+
+  const handleSave = () => {
+    if (rating === 0) return alert("Choisis une note !");
+    onSave(booking.id, rating, note);
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative">
+      {/* Bouton affichage */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="text-yellow-500 text-sm font-medium hover:underline"
+        title="Noter ce client"
+      >
+        {booking.owner_rating
+          ? `${'⭐'.repeat(booking.owner_rating)} (${booking.owner_rating}/5)`
+          : '☆ Noter'}
+      </button>
+
+      {/* Popover */}
+      {open && (
+        <div className="absolute right-0 z-50 bg-white border rounded-lg shadow-lg p-4 w-64 mt-1">
+          <p className="text-sm font-semibold text-gray-700 mb-2">Note client</p>
+
+          {/* Étoiles */}
+          <div className="flex gap-1 mb-3">
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                onClick={() => setRating(star)}
+                className={`text-2xl transition-transform hover:scale-110 ${
+                  star <= rating ? 'text-yellow-400' : 'text-gray-300'
+                }`}
+              >
+                ★
+              </button>
+            ))}
+          </div>
+
+          {/* Avis optionnel */}
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Avis optionnel... (ex: très bon locataire)"
+            className="w-full border rounded p-2 text-xs text-gray-600 resize-none h-20 focus:outline-none focus:ring-2 focus:ring-yellow-300"
+          />
+
+          {/* Boutons */}
+          <div className="flex justify-end gap-2 mt-2">
+            <button
+              onClick={() => setOpen(false)}
+              className="text-xs text-gray-400 hover:text-gray-600"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleSave}
+              className="bg-yellow-400 hover:bg-yellow-500 text-white text-xs px-3 py-1 rounded font-bold"
+            >
+              Sauvegarder
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
   if (loading) return <div className="p-10">Chargement...</div>;
 
@@ -293,6 +384,7 @@ const getCalendarDayClass = (date, apartmentId) => {
                 <th className="p-4 border-b">Dates</th>
                 <th className="p-4 font-semibold w-40">Paiement (€)</th>
                 <th className="p-4 border-b text-right">Actions</th>
+                <th className="p-4 border-b">Note</th>
               </tr>
             </thead>
             <tbody>
@@ -423,7 +515,9 @@ const getCalendarDayClass = (date, apartmentId) => {
                       ✏️ Emails
                     </button>
                   </td>
-                  
+                  <td className="p-4 border-b">
+                    <StarRating booking={booking} onSave={handleRatingUpdate} />
+                  </td>
                 </tr>
               )})}
             </tbody>
@@ -449,7 +543,7 @@ const getCalendarDayClass = (date, apartmentId) => {
           {APARTMENTS.map((apt) => (
             <div key={apt.key} className="bg-white rounded-lg shadow p-4">
               <h3 className="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2">
-                🏠 {apt.name}
+               {apt.name}
               </h3>
               <DatePicker
                 inline
