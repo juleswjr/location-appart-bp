@@ -14,6 +14,6 @@ router.post('/:id/confirm', bookingController.confirmBooking);
 //router.put('/:id/confirm', bookingController.confirmBooking);
 router.put('/:id', bookingController.updateBookingStatus);
 router.put('/:id', bookingController.updateBooking);
-router.post('/bookings/:id/send-contract', bookingController.sendContractToOwner);
+router.post('/:id/send-contract', bookingController.sendContractToOwner);
 
 module.exports = router;
