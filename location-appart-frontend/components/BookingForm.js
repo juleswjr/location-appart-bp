@@ -274,7 +274,7 @@ export default function BookingForm({ apartment }) {
       {/* AFFICHAGE DU PRIX TOTAL */}
       {totalPrice > 0 && (
         <div className="mt-6 p-4 bg-gray-900 rounded-lg text-white flex justify-between items-center shadow-lg">
-          <div><p className="text-gray-400 text-xs uppercase font-bold tracking-wider">Total estimé</p><p className="text-2xl font-bold">{totalPrice} €</p></div>
+          <div><p className="text-gray-400 text-xs uppercase font-bold tracking-wider">Total</p><p className="text-2xl font-bold">{totalPrice} €</p></div>
           {isCalculating && <span className="text-xs text-yellow-400 animate-pulse">Calcul...</span>}
         </div>
       )}
