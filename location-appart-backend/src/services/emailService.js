@@ -246,11 +246,14 @@ exports.sendNewBookingNotification = async (data) => {
       html: `
         <div style="font-family: Arial, sans-serif;">
           <h2>Nouvelle demande reçue !</h2>
-          <p><strong>Appartement :</strong> ${data.apartment_name}</p>
-          <p><strong>Client :</strong> ${data.customer_name}</p>
-          <p><strong>Dates :</strong> du ${data.start_date} au ${data.end_date}</p>
-          <p><strong>Prix total :</strong> ${data.total_price/100} €</p>
-          <p><strong>Parking :</strong> ${data.has_parking}</p>
+          <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <h3 style="margin-top: 0;">Récapitulatif :</h3>
+              <p><strong>Appartement :</strong> ${data.apartment_name}</p>
+              <p><strong>Client :</strong> ${data.customer_name}</p>
+              <p><strong>Dates :</strong> du ${data.start_date} au ${data.end_date}</p>
+              <p><strong>Prix total :</strong> ${data.total_price/100} €</p>
+              <p><strong>Parking :</strong> ${data.has_parking}</p>
+          </div>
           <br>
           <p>👉 <a href="https://www.mybelleplagne.fr/admin">Accéder au centre de contrôle</a></p>
         </div>
@@ -290,7 +293,6 @@ exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
           <p><strong>Dates :</strong> Du ${details.start_date} au ${details.end_date}</p>
           <p><strong>Prix :</strong> ${details.total_price/100} €</p>
           <br>
-          <p>📄 <a href="${contractUrl}">Télécharger votre contrat</a></p>
           <p>À très bientôt !</p>
         </div>
       `
@@ -395,12 +397,39 @@ exports.sendBookingRejectedEmail = async (clientEmail, clientName, apartmentName
   return result;
 };
 
-// 6. Mail d'arrivée
-exports.sendArrivedEmail = async (clientEmail, clientName, apartmentName, custom_arrival_message) => {
+exports.sendDepositReminderEmail = async (clientEmail, clientName, details) => {
+  const { apartment_name, start_date, total_price, deposit_amount } = details;
+
+  const dateStr = new Date(start_date + 'T12:00:00') // ✅ Fix UTC : on force midi
+    .toLocaleDateString('fr-FR');
+
   const { data: result, error } = await resend.emails.send({
     from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
     to: clientEmail,
-    subject: `📍 Informations pour votre arrivée - ${apartmentName}`,
+    subject: `💰 Rappel acompte – ${apartment_name}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px;">
+        <h2>Bonjour ${clientName},</h2>
+        <p>Votre séjour à <strong>${apartment_name}</strong> approche !</p>
+        <p>Pour rappel, un acompte de <strong>${deposit_amount / 100} €</strong> 
+           (50% du total de ${total_price / 100} €) est à verser.</p>
+        <p>📅 Date d'arrivée : <strong>${dateStr}</strong></p>
+        <br>
+        <p>Cordialement,<br>L'équipe MyBellePlagne</p>
+      </div>
+    `
+  });
+
+  if (error) throw error;
+  return result;
+};
+/*
+// 6. Mail d'arrivée
+exports.sendArrivedEmail = async (clientEmail, clientName, apartmentName, custom_arrival_message) => {
+  const { data: result, error } = await resend.emails.send({
+    from: `Location MyBellePlagne <${process.env.EMAIL_FROM}>`,
+    to: clientEmail,
+    subject: `Rappel accompte - ${apartmentName}`,
     html: `<div style="font-family: Arial, sans-serif;">${custom_arrival_message}</div>`
   });
 
@@ -457,7 +486,7 @@ exports.sendParkingEmail = async (clientEmail, apartmentName, messageHtml) => {
   return transporter.sendMail(mailOptions);
 };
 
-
+*/
 exports.sendContractToOwner = async (bookingInfo, contractUrl) => {
   const { apartment_name, customer_name, start_date, end_date, total_price, has_parking } = bookingInfo;
 

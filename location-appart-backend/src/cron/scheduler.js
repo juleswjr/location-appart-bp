@@ -1,4 +1,74 @@
 const cron = require('node-cron');
+const supabase = require('../config/supabaseClient');
+const emailService = require('../services/emailService');
+
+const initScheduledJobs = () => {
+  console.log('⏰ Système de planification des emails (Cron) activé.');
+
+  cron.schedule('30 11 * * *', async () => {
+    console.log("🔄 [CRON] Vérification quotidienne acompte...");
+
+    // ✅ FIX DATE : On construit la date en local, pas en UTC
+    const in40Days = new Date();
+    in40Days.setDate(in40Days.getDate() + 40);
+    // On force le format YYYY-MM-DD en heure locale (pas UTC)
+    const target = `${in40Days.getFullYear()}-${String(in40Days.getMonth() + 1).padStart(2, '0')}-${String(in40Days.getDate()).padStart(2, '0')}`;
+
+    console.log(`📅 Recherche des réservations démarrant le : ${target}`);
+
+    try {
+      const { data: bookings, error } = await supabase
+        .from('bookings')
+        .select('*, apartments(name)')
+        .eq('status', 'confirmed')
+        .eq('start_date', target)
+        .eq('sent_deposit_email', false); // ✅ Colonne à créer (voir ci-dessous)
+
+      if (error) throw error;
+
+      if (!bookings || bookings.length === 0) {
+        console.log("✅ Aucun acompte à rappeler aujourd'hui.");
+        return;
+      }
+
+      console.log(`💰 ${bookings.length} rappel(s) d'acompte à envoyer.`);
+
+      for (const booking of bookings) {
+        try {
+          await emailService.sendDepositReminderEmail(
+            booking.customer_email,
+            booking.customer_name,
+            {
+              apartment_name: booking.apartments.name,
+              start_date: booking.start_date,
+              total_price: booking.total_price,
+              deposit_amount: booking.total_price / 2, // 50%
+            }
+          );
+
+          await supabase
+            .from('bookings')
+            .update({ sent_deposit_email: true })
+            .eq('id', booking.id);
+
+          console.log(`   ✅ Rappel acompte envoyé à ${booking.customer_name}`);
+
+        } catch (err) {
+          console.error(`   ❌ Erreur pour ${booking.customer_name}:`, err.message);
+        }
+      }
+
+    } catch (error) {
+      console.error("❌ Erreur CRITIQUE Cron :", error);
+    }
+  });
+};
+
+module.exports = initScheduledJobs;
+
+/*
+
+const cron = require('node-cron');
 const supabase = require('../config/supabaseClient'); 
 const emailService = require('../services/emailService');
 
@@ -15,8 +85,8 @@ const initScheduledJobs = () => {
     const today = new Date().toISOString().split('T')[0]; // ex: "2026-02-16"
     
     const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0]; // ex: "2026-02-17"
+    tomorrow.setDate(tomorrow.getDate() + 40);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0]; // ex: "2026-02-26"
 
     try {
       // ============================================================
@@ -151,3 +221,5 @@ const initScheduledJobs = () => {
 };
 
 module.exports = initScheduledJobs;
+
+*/
