@@ -322,6 +322,11 @@ export default function AdminDashboard() {
                   <td className="p-4 border-b text-right space-x-2">
                     {booking.status === 'pending' && (
                       <>
+
+                        
+                        <button onClick={() => handleSendContract(booking.id)}>
+                          📄 Contrat
+                        </button>
                         <button 
                           onClick={() => updateStatus(booking.id, 'confirmed')}
                           className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"

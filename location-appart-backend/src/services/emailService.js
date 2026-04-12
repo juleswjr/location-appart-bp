@@ -210,7 +210,11 @@ exports.sendParkingEmail = async (clientEmail, apartmentName, messageHtml) => {
   
   return transporter.sendMail(mailOptions);
 };
-
+<p style="text-align: center; margin: 30px 0;">
+            <a href="${pdfUrl}" style="background: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              📄 Télécharger le récapitulatif
+            </a>
+          </p>
 */
 
 
@@ -327,16 +331,9 @@ exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetail
           </div>
 
           <p>Le propriétaire va étudier votre demande rapidement.</p>
-          
-          <p style="text-align: center; margin: 30px 0;">
-            <a href="${pdfUrl}" style="background: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              📄 Télécharger le récapitulatif
-            </a>
-          </p>
-
-          <p>Vous recevrez un email dès confirmation.</p>
+          <p>Cordialement,</p>
           <br>
-          <p>À très vite !</p>
+          <p>L'équipe de MyBellePlagne</p>
         </div>
       `
     });
@@ -460,6 +457,35 @@ exports.sendParkingEmail = async (clientEmail, apartmentName, messageHtml) => {
   return transporter.sendMail(mailOptions);
 };
 
+
+exports.sendContractToOwner = async (bookingInfo, contractPath) => {
+  const { apartment_name, customer_name, start_date, end_date, total_price, has_parking } = bookingInfo;
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_FROM,
+    to: process.env.OWNER_EMAIL, // ← à définir dans ton .env
+    subject: `📄 Contrat de location – ${apartment_name} – ${customer_name}`,
+    html: `
+      <h2>Contrat de location</h2>
+      <p>Bonjour,</p>
+      <p>Veuillez trouver ci-joint le contrat pour la réservation suivante :</p>
+      <ul>
+        <li><strong>Appartement :</strong> ${apartment_name}</li>
+        <li><strong>Client :</strong> ${customer_name}</li>
+        <li><strong>Du :</strong> ${start_date}</li>
+        <li><strong>Au :</strong> ${end_date}</li>
+        <li><strong>Prix total :</strong> ${total_price} €</li>
+        <li><strong>Parking :</strong> ${has_parking ? "Oui" : "Non"}</li>
+      </ul>
+    `,
+    attachments: [
+      {
+        filename: `contrat-${customer_name.replace(/\s+/g, '-')}.pdf`,
+        path: contractPath, // chemin local ou URL selon ta config pdfService
+      }
+    ]
+  });
+};
 /*
 
 ```
