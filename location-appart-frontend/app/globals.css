@@ -57,3 +57,15 @@ html {
   background: #2563eb !important; /* Bleu */
   color: white !important;
 }
+
+.booked-day {
+  background-color: #ef4444 !important;
+  color: white !important;
+  border-radius: 50% !important;
+}
+
+.react-datepicker__day--disabled.booked-day {
+  background-color: #ef4444 !important;
+  color: white !important;
+  opacity: 1 !important;
+}

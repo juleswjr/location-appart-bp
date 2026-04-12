@@ -3,6 +3,12 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import EmailEditorModal from '../../components/EmailEditorModal';
+import DatePicker from 'react-datepicker';
+import { fr } from 'date-fns/locale';
+import 'react-datepicker/dist/react-datepicker.css';
+
+
+
 export default function AdminDashboard() {
   const [bookings, setBookings] = useState([]);
   const router = useRouter();
@@ -222,6 +228,37 @@ export default function AdminDashboard() {
   };
 
 
+  const [calendarMonth, setCalendarMonth] = useState({
+  'marmotte': new Date(),
+  'chamois': new Date(),
+  'nid': new Date(),
+  'front': new Date(),
+});
+
+const APARTMENTS = [
+  { key: 'marmotte', name: 'Marmotte',       id: '3cdc88a6-86ae-40f6-b144-5c7198187be0' },
+  { key: 'chamois',  name: 'Chamois',         id: '584d3c17-ea04-4513-a7e4-0979b7ce5771' },
+  { key: 'nid',      name: 'Nid Douillet',    id: '7fa8798b-f0c2-4c8d-9308-9c5c50e3c7ce' },
+  { key: 'front',    name: 'Front de Neige',  id: 'b176983c-9cec-4926-bc71-bff870a75166' },
+];
+
+// Retourne true si une date est dans une réservation confirmée pour cet appart
+const isBooked = (date, apartmentId) => {
+  return bookings.some(b => {
+    if (b.apartment_id !== apartmentId) return false;
+    if (b.status !== 'confirmed') return false;
+    const start = new Date(b.start_date);
+    const end   = new Date(b.end_date);
+    return date >= start && date < end;
+  });
+};
+
+const getCalendarDayClass = (date, apartmentId) => {
+  if (isBooked(date, apartmentId)) return 'booked-day';
+  return '';
+};
+
+
   if (loading) return <div className="p-10">Chargement...</div>;
 
   return (
@@ -405,6 +442,40 @@ export default function AdminDashboard() {
           onSave={saveCustomEmails}
         />
       )}
+      {/* CALENDRIERS PAR APPARTEMENT */}
+      <div className="mt-10">
+        <h2 className="text-2xl font-bold text-gray-800 mb-6">Disponibilités par appartement</h2>
+        <div className="grid grid-cols-2 gap-6">
+          {APARTMENTS.map((apt) => (
+            <div key={apt.key} className="bg-white rounded-lg shadow p-4">
+              <h3 className="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2">
+                🏠 {apt.name}
+              </h3>
+              <DatePicker
+                inline
+                locale={fr}
+                dayClassName={(date) => getCalendarDayClass(date, apt.id)}
+                filterDate={() => true} // Toutes les dates visibles
+                onMonthChange={(date) =>
+                  setCalendarMonth(prev => ({ ...prev, [apt.key]: date }))
+                }
+                selected={calendarMonth[apt.key]}
+                onChange={() => {}} // Lecture seule, pas de sélection
+              />
+              {/* Légende */}
+              <div className="flex items-center gap-3 mt-3 text-xs text-gray-500">
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Réservé
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-gray-200 inline-block"></span> Disponible
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
+    
   );
 }
