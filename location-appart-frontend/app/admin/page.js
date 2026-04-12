@@ -265,8 +265,9 @@ const isBooked = (date, apartmentId) => {
   return bookings.some(b => {
     if (b.apartment_id !== apartmentId) return false;
     if (b.status !== 'confirmed') return false;
-    const start = new Date(b.start_date);
-    const end   = new Date(b.end_date);
+    // ✅ Fix UTC : on force midi pour éviter le décalage
+    const start = new Date(b.start_date + 'T12:00:00');
+    const end   = new Date(b.end_date + 'T12:00:00');
     return date >= start && date < end;
   });
 };
@@ -420,8 +421,8 @@ const StarRating = ({ booking, onSave }) => {
                     <div className="text-xs text-gray-500">{booking.customer_email}</div>
                   </td>
                   <td className="p-4 border-b text-sm">
-                    Du {new Date(booking.start_date).toLocaleDateString()}<br/>
-                    Au {new Date(booking.end_date).toLocaleDateString()}
+                    Du {new Date(booking.start_date + 'T12:00:00').toLocaleDateString()}<br/>
+                    Au {new Date(booking.end_date + 'T12:00:00').toLocaleDateString()}
                   </td>
                   <td className="p-4">
                     <div className="flex flex-col gap-1">
