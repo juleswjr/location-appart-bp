@@ -37,9 +37,14 @@ exports.downloadAccountingExcel = async (req, res) => {
     worksheet.columns = [
       { header: 'Appartement', key: 'appart', width: 25 },
       { header: 'Client', key: 'client', width: 20 },
+      { header: 'Téléphone', key: 'tel', width: 20 },
+      { header: 'Mail', key: 'mail', width: 20 },
+
       { header: 'Date Arrivée', key: 'start', width: 15 },
       { header: 'Date Départ', key: 'end', width: 15 },
-      { header: 'Total Payé (€)', key: 'price', width: 15, style: { numFmt: '#,##0.00 €' } }
+      { header: 'Total Payé (€)', key: 'price', width: 15, style: { numFmt: '#,##0.00 €' } },
+      { header: 'Note et avis', key: 'note', width: 50 }
+
     ];
 
     // Mettre l'en-tête en Gras
@@ -50,10 +55,14 @@ exports.downloadAccountingExcel = async (req, res) => {
       worksheet.addRow({
         appart: booking.apartments?.name || "Inconnu",
         client: booking.customer_name,
+        tel: booking.customer_phone || '',
+        mail: booking.customer_email || '',
         start: new Date(booking.start_date).toLocaleDateString(),
         end: new Date(booking.end_date).toLocaleDateString(),
-        // On divise par 100 pour remettre en Euros
-        price: (booking.amount_paid) 
+        price: booking.amount_paid,
+        note: booking.owner_rating 
+          ? `${booking.owner_rating}/5${booking.owner_note ? ' – ' + booking.owner_note : ''}`
+          : ''
       });
     });
 
