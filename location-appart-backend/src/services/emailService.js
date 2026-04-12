@@ -458,33 +458,49 @@ exports.sendParkingEmail = async (clientEmail, apartmentName, messageHtml) => {
 };
 
 
-exports.sendContractToOwner = async (bookingInfo, contractPath) => {
+exports.sendContractToOwner = async (bookingInfo, contractUrl) => {
   const { apartment_name, customer_name, start_date, end_date, total_price, has_parking } = bookingInfo;
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_FROM,
-    to: process.env.OWNER_EMAIL, // ← à définir dans ton .env
-    subject: `📄 Contrat de location – ${apartment_name} – ${customer_name}`,
+  console.log("\n📧 ========== CONTRAT PROPRIO ==========");
+
+  // Télécharger le PDF depuis Supabase pour l'attacher
+  const pdfResponse = await fetch(contractUrl);
+  const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
+
+  const { data: result, error } = await resend.emails.send({
+    from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
+    to: process.env.EMAIL_PROPRIO,
+    subject: `📄 Contrat – ${apartment_name} – ${customer_name}`,
     html: `
-      <h2>Contrat de location</h2>
-      <p>Bonjour,</p>
-      <p>Veuillez trouver ci-joint le contrat pour la réservation suivante :</p>
-      <ul>
-        <li><strong>Appartement :</strong> ${apartment_name}</li>
-        <li><strong>Client :</strong> ${customer_name}</li>
-        <li><strong>Du :</strong> ${start_date}</li>
-        <li><strong>Au :</strong> ${end_date}</li>
-        <li><strong>Prix total :</strong> ${total_price} €</li>
-        <li><strong>Parking :</strong> ${has_parking ? "Oui" : "Non"}</li>
-      </ul>
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <h2>Contrat de location à signer</h2>
+        <p>Voici le contrat pour la réservation suivante :</p>
+        <ul>
+          <li><strong>Appartement :</strong> ${apartment_name}</li>
+          <li><strong>Client :</strong> ${customer_name}</li>
+          <li><strong>Du :</strong> ${start_date}</li>
+          <li><strong>Au :</strong> ${end_date}</li>
+          <li><strong>Prix total :</strong> ${total_price / 100} €</li>
+          <li><strong>Parking :</strong> ${has_parking ? "Oui" : "Non"}</li>
+        </ul>
+      </div>
     `,
     attachments: [
       {
         filename: `contrat-${customer_name.replace(/\s+/g, '-')}.pdf`,
-        path: contractPath, // chemin local ou URL selon ta config pdfService
+        content: pdfBuffer,
       }
     ]
   });
+
+  if (error) {
+    console.error("❌ Erreur Resend contrat proprio:", error);
+    throw error;
+  }
+
+  console.log("✅ Contrat envoyé au proprio via Resend");
+  console.log("========================================\n");
+  return result;
 };
 /*
 

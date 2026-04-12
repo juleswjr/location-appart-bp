@@ -9,11 +9,12 @@ router.get('/:apartmentId', bookingController.getBookedDates);
 // Envoyer une demande
 router.post('/', bookingController.createBooking);
 router.post('/:id/confirm', bookingController.confirmBooking);
+router.post('/:id/send-contract', bookingController.sendContractToOwner);
 
 // Confirmer une demande
 //router.put('/:id/confirm', bookingController.confirmBooking);
+
 router.put('/:id', bookingController.updateBookingStatus);
 router.put('/:id', bookingController.updateBooking);
-router.post('/:id/send-contract', bookingController.sendContractToOwner);
 
 module.exports = router;
