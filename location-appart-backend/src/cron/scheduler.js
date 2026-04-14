@@ -10,7 +10,7 @@ const initScheduledJobs = () => {
 
     // ✅ FIX DATE : On construit la date en local, pas en UTC
     const in40Days = new Date();
-    in40Days.setDate(in40Days.getDate() + 242);
+    in40Days.setDate(in40Days.getDate() + 305);
     // On force le format YYYY-MM-DD en heure locale (pas UTC)
     const target = `${in40Days.getFullYear()}-${String(in40Days.getMonth() + 1).padStart(2, '0')}-${String(in40Days.getDate()).padStart(2, '0')}`;
 
