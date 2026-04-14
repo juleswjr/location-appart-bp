@@ -5,12 +5,12 @@ const emailService = require('../services/emailService');
 const initScheduledJobs = () => {
   console.log('⏰ Système de planification des emails (Cron) activé.');
 
-  cron.schedule('* * * * *', async () => {
+  cron.schedule('30 11 * *', async () => {
     console.log("🔄 [CRON] Vérification quotidienne acompte...");
 
     // ✅ FIX DATE : On construit la date en local, pas en UTC
     const in40Days = new Date();
-    in40Days.setDate(in40Days.getDate() + 305);
+    in40Days.setDate(in40Days.getDate() + 40);
     // On force le format YYYY-MM-DD en heure locale (pas UTC)
     const target = `${in40Days.getFullYear()}-${String(in40Days.getMonth() + 1).padStart(2, '0')}-${String(in40Days.getDate()).padStart(2, '0')}`;
 
@@ -22,8 +22,8 @@ const initScheduledJobs = () => {
         .select('*, apartments(name)')
         .eq('status', 'confirmed')
         .eq('start_date', target)
-        .eq('sent_deposit_email', false); // ✅ Colonne à créer (voir ci-dessous)
-
+        .eq('sent_deposit_email', false) // ✅ Colonne à créer (voir ci-dessous)
+        .eq('skip_deposit_email', false);
       if (error) throw error;
 
       if (!bookings || bookings.length === 0) {
@@ -35,16 +35,29 @@ const initScheduledJobs = () => {
 
       for (const booking of bookings) {
         try {
-          await emailService.sendDepositReminderEmail(
-            booking.customer_email,
-            booking.customer_name,
-            {
-              apartment_name: booking.apartments.name,
-              start_date: booking.start_date,
-              total_price: booking.total_price,
-              deposit_amount: booking.total_price / 2, // 50%
-            }
-          );
+          // Envoi au client ET au proprio en parallèle
+          await Promise.all([
+            emailService.sendDepositReminderEmail(
+              booking.customer_email,
+              booking.customer_name,
+              {
+                apartment_name: booking.apartments.name,
+                start_date: booking.start_date,
+                total_price: booking.total_price,
+                deposit_amount: booking.total_price / 2,
+              }
+            ),
+            emailService.sendDepositReminderEmail(
+              process.env.EMAIL_PROPRIO, // ✅ Même mail, envoyé au proprio aussi
+              `Rappel proprio – ${booking.customer_name}`, // Nom affiché dans le mail
+              {
+                apartment_name: booking.apartments.name,
+                start_date: booking.start_date,
+                total_price: booking.total_price,
+                deposit_amount: booking.total_price / 2,
+              }
+            ),
+          ]);
 
           await supabase
             .from('bookings')

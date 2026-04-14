@@ -65,7 +65,7 @@ export default function EmailEditorModal({ booking, onClose, onSave }) {
           {/* COLONNE ARRIVÉE */}
           <div className="bg-white p-4 rounded-lg shadow-sm border border-green-100">
             <div className="flex justify-between items-center mb-3">
-              <h4 className="font-bold text-green-800 flex items-center gap-2">🛬 Arrivée</h4>
+              <h4 className="font-bold text-green-800 flex items-center gap-2">Rappel Accompte</h4>
               <input 
                 type="date" 
                 value={arrivalDate}

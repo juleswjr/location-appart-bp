@@ -384,6 +384,7 @@ const StarRating = ({ booking, onSave }) => {
                 <th className="p-4 border-b">Client</th>
                 <th className="p-4 border-b">Dates</th>
                 <th className="p-4 font-semibold w-40">Paiement (€)</th>
+                <th className="p-4 border-b">Acompte</th>
                 <th className="p-4 border-b text-right">Actions</th>
                 <th className="p-4 border-b">Note</th>
               </tr>
@@ -471,6 +472,23 @@ const StarRating = ({ booking, onSave }) => {
                         )}
                       </div>
                     </div>
+                  </td>
+                  <td className="p-4 border-b">
+                    <label className="flex items-center gap-2 cursor-pointer" title="Bloquer l'envoi du mail d'acompte">
+                      <input
+                        type="checkbox"
+                        checked={booking.skip_deposit_email || false}
+                        onChange={() => toggleEmailStatus(booking.id, 'skip_deposit_email', booking.skip_deposit_email)}
+                        className="w-4 h-4 accent-red-500"
+                      />
+                      <span className="text-xs text-gray-500">
+                        {booking.sent_deposit_email 
+                          ? '✅ Envoyé' 
+                          : booking.skip_deposit_email 
+                          ? '🚫 Bloqué' 
+                          : '⏳ En attente'}
+                      </span>
+                    </label>
                   </td>
                   <td className="p-4 border-b text-right space-x-2">
                     {booking.status === 'pending' && (
