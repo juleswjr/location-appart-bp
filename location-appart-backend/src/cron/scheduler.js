@@ -5,7 +5,7 @@ const emailService = require('../services/emailService');
 const initScheduledJobs = () => {
   console.log('⏰ Système de planification des emails (Cron) activé.');
 
-  cron.schedule('* * * *', async () => {
+  cron.schedule('* * * * *', async () => {
     console.log("🔄 [CRON] Vérification quotidienne acompte...");
 
     // ✅ FIX DATE : On construit la date en local, pas en UTC
