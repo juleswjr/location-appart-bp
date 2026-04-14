@@ -8,7 +8,6 @@ import { fr } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 
 
-
 export default function AdminDashboard() {
   const [bookings, setBookings] = useState([]);
   const router = useRouter();
@@ -526,13 +525,7 @@ const StarRating = ({ booking, onSave }) => {
                        </span>
                        
                     )}
-                    <button 
-                      onClick={() => setEditingBooking(booking)}
-                      className="bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 text-sm"
-                      title="Personnaliser les emails"
-                    >
-                      ✏️ Emails
-                    </button>
+                    
                   </td>
                   <td className="p-4 border-b">
                     <StarRating booking={booking} onSave={handleRatingUpdate} />
@@ -592,3 +585,14 @@ const StarRating = ({ booking, onSave }) => {
     
   );
 }
+
+
+/*
+                    <button 
+                      onClick={() => setEditingBooking(booking)}
+                      className="bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 text-sm"
+                      title="Personnaliser les emails"
+                    >
+                      ✏️ Emails
+                    </button>
+                    */
