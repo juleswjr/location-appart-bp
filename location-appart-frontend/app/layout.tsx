@@ -63,15 +63,14 @@ export default function RootLayout({
               var btn = document.getElementById('btn-reset-french');
               if (btn) {
                 btn.onclick = function() {
-                  // 1. On foudroie le cookie sur tous les sous-domaines possibles
-                  var host = window.location.hostname;
-                  document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                  document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + host + ";";
-                  document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=." + host + ";";
-                  
-                  // 2. LA MAGIE EST LÀ : On recharge le site en nettoyant l'URL
-                  // Ça efface le vilain #googtrans(en) que Google cache à la fin
-                  window.location.href = window.location.pathname;
+                  // 1. On cherche le menu déroulant caché de Google
+                  var select = document.querySelector('.goog-te-combo');
+                  if (select) {
+                    // 2. On le remet sur la toute première option (Langue originale)
+                    select.value = ''; 
+                    // 3. On force Google à valider ce choix instantanément
+                    select.dispatchEvent(new Event('change'));
+                  }
                 };
               }
             }, 1000);
