@@ -45,10 +45,19 @@ export default function RootLayout({
             function googleTranslateElementInit() {
               new google.translate.TranslateElement({
                 pageLanguage: 'fr',
-                includedLanguages: 'en,nl', // Traduction dispo en Anglais et Néerlandais
+                includedLanguages: 'en,nl',
                 layout: google.translate.TranslateElement.InlineLayout.SIMPLE
               }, 'google_translate_element');
             }
+
+            // 👇 LE NOUVEAU PETIT SCRIPT MAGIQUE 👇
+            // Il vérifie toutes les secondes si le menu est chargé pour renommer la 1ère ligne
+            setInterval(() => {
+              const select = document.querySelector('.goog-te-combo');
+              if (select && select.options[0]) {
+                select.options[0].text = "🇫🇷 Français (Original)";
+              }
+            }, 1000);
           `}
         </Script>
         
