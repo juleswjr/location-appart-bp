@@ -32,13 +32,22 @@ export default function RootLayout({
         {children}
 
         {/* ========================================== */}
-        {/* 👇 3. LE BLOC GOOGLE TRANSLATE EST ICI 👇 */}
+        {/* 👇 BLOC GOOGLE TRANSLATE + BOUTON FR 👇 */}
         {/* ========================================== */}
         
-        {/* Le conteneur du bouton (placé en bas à droite de l'écran) */}
-        <div id="google_translate_element" className="fixed bottom-4 right-4 z-50 bg-white p-2 rounded shadow-lg"></div>
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
+          {/* NOTRE BOUTON DE RETOUR AU FRANÇAIS */}
+          <button 
+            id="btn-reset-french" 
+            className="bg-white text-gray-700 font-bold px-3 py-2 rounded-lg shadow-lg border border-gray-200 hover:bg-gray-100 transition-colors text-sm"
+          >
+            🇫🇷 FR
+          </button>
+
+          {/* LE BOUTON GOOGLE */}
+          <div id="google_translate_element" className="bg-white p-1 rounded-lg shadow-lg"></div>
+        </div>
         
-        {/* Le moteur de traduction Google */}
         <Script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="afterInteractive" />
         <Script id="google-translate-init" strategy="afterInteractive">
           {`
@@ -50,14 +59,19 @@ export default function RootLayout({
               }, 'google_translate_element');
             }
 
-            // 👇 LE NOUVEAU PETIT SCRIPT MAGIQUE 👇
-            // Il vérifie toutes les secondes si le menu est chargé pour renommer la 1ère ligne
-            setInterval(() => {
-              const select = document.querySelector('.goog-te-combo');
-              if (select && select.options[0]) {
-                select.options[0].text = "🇫🇷 Français (Original)";
+            // Notre fonction pour forcer le retour au Français
+            document.addEventListener("DOMContentLoaded", function() {
+              const resetBtn = document.getElementById('btn-reset-french');
+              if(resetBtn) {
+                resetBtn.addEventListener('click', function() {
+                  // 1. On détruit la mémoire de Google Translate
+                  document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+                  document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=" + window.location.hostname + "; path=/;";
+                  // 2. On rafraîchit la page
+                  window.location.reload();
+                });
               }
-            }, 1000);
+            });
           `}
         </Script>
         
