@@ -32,53 +32,27 @@ export default function RootLayout({
         {children}
 
 {/* ========================================== */}
-        {/* 👇 BLOC GOOGLE TRANSLATE + BOUTON FR 👇 */}
+        {/* 👇 NOUVEAU BLOC : GTRANSLATE (PRO & GRATUIT) 👇 */}
         {/* ========================================== */}
         
-        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2">
-          {/* NOTRE BOUTON DE RETOUR AU FRANÇAIS */}
-          <button 
-            id="btn-reset-french" 
-            className="bg-white text-gray-700 font-bold px-3 py-2 rounded-lg shadow-lg border border-gray-200 hover:bg-gray-100 transition-colors text-sm"
-          >
-            🇫🇷 FR
-          </button>
-
-          {/* LE BOUTON GOOGLE */}
-          <div id="google_translate_element" className="bg-white p-1 rounded-lg shadow-lg"></div>
+        {/* Le conteneur du menu déroulant (fixé en bas à droite) */}
+        <div className="fixed bottom-4 right-4 z-50 shadow-lg rounded">
+          <div className="gtranslate_wrapper"></div>
         </div>
-        
-        <Script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" strategy="afterInteractive" />
-        <Script id="google-translate-init" strategy="afterInteractive">
-          {`
-            function googleTranslateElementInit() {
-              new google.translate.TranslateElement({
-                pageLanguage: 'fr',
-                includedLanguages: 'en,nl',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-              }, 'google_translate_element');
-            }
 
-            setTimeout(function() {
-              var btn = document.getElementById('btn-reset-french');
-              if (btn) {
-                btn.onclick = function() {
-                  // 1. On cherche le menu déroulant caché de Google
-                  var select = document.querySelector('.goog-te-combo');
-                  if (select) {
-                    // 2. On le remet sur la toute première option (Langue originale)
-                    select.value = ''; 
-                    // 3. On force Google à valider ce choix instantanément
-                    select.dispatchEvent(new Event('change'));
-                  }
-                };
-              }
-            }, 1000);
-          `}
+        {/* Les paramètres du widget */}
+        <Script id="gtranslate-settings" strategy="beforeInteractive">
+          {`window.gtranslateSettings = {
+            "default_language": "fr",
+            "languages": ["fr", "en", "nl"],
+            "wrapper_selector": ".gtranslate_wrapper",
+            "flag_style": "2d"
+          }`}
         </Script>
         
-        {/* ========================================== */}
-        {/* 👆 FIN DU BLOC GOOGLE TRANSLATE 👆 */}
+        {/* Le moteur GTranslate */}
+        <Script src="https://cdn.gtranslate.net/widgets/latest/dropdown.js" strategy="afterInteractive" />
+        
         {/* ========================================== */}
 
       </body>
