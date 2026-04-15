@@ -101,3 +101,10 @@ body {
 .goog-te-gadget span, .goog-logo-link {
     display: none !important;
 }
+/* 5. Tuer le fond gris sur les mots survolés (Méthode brutale) */
+body .goog-text-highlight, 
+body font {
+    background-color: transparent !important;
+    background: none !important;
+    box-shadow: none !important;
+}

@@ -31,7 +31,7 @@ export default function RootLayout({
       >
         {children}
 
-        {/* ========================================== */}
+{/* ========================================== */}
         {/* 👇 BLOC GOOGLE TRANSLATE + BOUTON FR 👇 */}
         {/* ========================================== */}
         
@@ -59,19 +59,20 @@ export default function RootLayout({
               }, 'google_translate_element');
             }
 
-            // Notre fonction pour forcer le retour au Français
-            document.addEventListener("DOMContentLoaded", function() {
-              const resetBtn = document.getElementById('btn-reset-french');
-              if(resetBtn) {
-                resetBtn.addEventListener('click', function() {
-                  // 1. On détruit la mémoire de Google Translate
+            // Technique du délai pour être sûr que le bouton existe bien dans Next.js
+            setTimeout(function() {
+              var btn = document.getElementById('btn-reset-french');
+              if (btn) {
+                btn.onclick = function() {
+                  // On écrase le cookie Google partout où il pourrait se cacher
                   document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
                   document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=" + window.location.hostname + "; path=/;";
-                  // 2. On rafraîchit la page
+                  document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=." + window.location.hostname + "; path=/;";
+                  // On recharge la page à neuf
                   window.location.reload();
-                });
+                };
               }
-            });
+            }, 1000);
           `}
         </Script>
         
