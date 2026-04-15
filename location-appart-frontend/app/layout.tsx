@@ -59,17 +59,19 @@ export default function RootLayout({
               }, 'google_translate_element');
             }
 
-            // Technique du délai pour être sûr que le bouton existe bien dans Next.js
             setTimeout(function() {
               var btn = document.getElementById('btn-reset-french');
               if (btn) {
                 btn.onclick = function() {
-                  // On écrase le cookie Google partout où il pourrait se cacher
+                  // 1. On foudroie le cookie sur tous les sous-domaines possibles
+                  var host = window.location.hostname;
                   document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-                  document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=" + window.location.hostname + "; path=/;";
-                  document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; domain=." + window.location.hostname + "; path=/;";
-                  // On recharge la page à neuf
-                  window.location.reload();
+                  document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + host + ";";
+                  document.cookie = "googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=." + host + ";";
+                  
+                  // 2. LA MAGIE EST LÀ : On recharge le site en nettoyant l'URL
+                  // Ça efface le vilain #googtrans(en) que Google cache à la fin
+                  window.location.href = window.location.pathname;
                 };
               }
             }, 1000);
