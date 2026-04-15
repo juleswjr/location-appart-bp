@@ -74,12 +74,27 @@ html {
 /* 🎨 CUSTOMISATION DU BOUTON GOOGLE TRANSLATE 🎨 */
 /* ==================================================== */
 
-/* 1. Cacher l'horrible barre supérieure de Google */
-.goog-te-banner-frame.skiptranslate {
+/* ==================================================== */
+/* 🧨 DESTRUCTION DE LA BARRE DU HAUT GOOGLE 🧨 */
+/* ==================================================== */
+
+/* Vise directement l'iframe (la fenêtre) que Google essaie d'insérer en haut */
+iframe.skiptranslate {
     display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
 }
+
+/* Force le site à rester en haut (Google essaie de rajouter 40px de vide) */
 body {
-    top: 0px !important; /* Empêche le site d'être poussé vers le bas */
+    top: 0px !important; 
+    position: static !important;
+}
+
+/* Au cas où Google essaie de décaler la balise HTML entière */
+html {
+    top: 0px !important;
+    margin-top: 0px !important;
 }
 
 /* 2. Cacher le texte "Fourni par Google" et le logo */
