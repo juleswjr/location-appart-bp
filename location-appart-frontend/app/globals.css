@@ -71,57 +71,33 @@ html {
 }
 
 /* ==================================================== */
-/* 🎨 CUSTOMISATION DU BOUTON GOOGLE TRANSLATE 🎨 */
+/* 🎨 NETTOYAGE ABSOLU DE GOOGLE TRANSLATE 🎨 */
 /* ==================================================== */
 
-/* ==================================================== */
-/* 🧨 DESTRUCTION DE LA BARRE DU HAUT GOOGLE 🧨 */
-/* ==================================================== */
-
-/* Vise directement l'iframe (la fenêtre) que Google essaie d'insérer en haut */
-iframe.skiptranslate {
+/* 1. Cacher la barre du haut SANS casser le bouton */
+.goog-te-banner-frame.skiptranslate {
     display: none !important;
-    visibility: hidden !important;
-    height: 0 !important;
 }
-
-/* Force le site à rester en haut (Google essaie de rajouter 40px de vide) */
 body {
-    top: 0px !important; 
-    position: static !important;
-}
-
-/* Au cas où Google essaie de décaler la balise HTML entière */
-html {
     top: 0px !important;
-    margin-top: 0px !important;
 }
 
-/* 2. Cacher le texte "Fourni par Google" et le logo */
+/* 2. ÉRADIQUER la bulle de texte original au survol (au milieu de l'écran) */
+#goog-gt-tt, .VIpgJd-ZVi9od-ORHb-OEVmcd, .goog-te-balloon-frame {
+    display: none !important;
+}
+
+/* 3. Enlever le surlignage jaune/gris quand on passe la souris sur le texte */
+.goog-text-highlight {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* 4. Nettoyer le bouton (Enlever "Fourni par Google" et le logo) */
 .goog-te-gadget {
     color: transparent !important;
     font-size: 0px !important;
 }
-.goog-te-gadget span {
-    display: none !important;
-}
-
-/* 3. Styliser le menu déroulant pour qu'il fasse plus "Pro" */
-.goog-te-gadget .goog-te-combo {
-    color: #374151 !important; /* Gris foncé classique */
-    background-color: #ffffff !important;
-    padding: 8px 16px !important;
-    border-radius: 8px !important; /* Bords arrondis */
-    border: 1px solid #d1d5db !important; /* Bordure discrète */
-    font-family: inherit !important; /* Utilise la police de ton site */
-    font-size: 14px !important;
-    outline: none !important;
-    cursor: pointer !important;
-    margin: 0 !important;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important; /* Petite ombre sympa */
-}
-
-/* Enlever l'effet au survol sur le logo caché */
-.goog-logo-link {
+.goog-te-gadget span, .goog-logo-link {
     display: none !important;
 }
