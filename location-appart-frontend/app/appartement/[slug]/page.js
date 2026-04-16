@@ -24,6 +24,9 @@ async function getApartment(slug) {
   }
 }
 
+
+
+
 // Petite fonction pour choisir l'icône des restrictions
 const getRestrictionIcon = (text) => {
   const lowerText = text.toLowerCase();
@@ -32,6 +35,53 @@ const getRestrictionIcon = (text) => {
   if (lowerText.includes('pmr') || lowerText.includes('handicap')) return <Accessibility size={20} />;
   return <Ban size={20} />;
 };
+
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const apartment = await getApartment(slug);
+
+  if (!apartment) {
+    return { title: 'Appartement introuvable – MyBellePlagne' };
+  }
+
+  const slugMeta = {
+  marmotte: {
+    title: 'Marmotte MyBellePlagne – Location appartement Belle Plagne',
+    description: `Appartement Marmotte MyBellePlagne – Réservez directement sur MyBellePlagne.fr. Ski aux pieds, ${apartment.capacity} personnes.`,
+    keywords: 'marmotte mybelleplagne, mybelleplagne marmotte, location marmotte belle plagne',
+  },
+  chamois: {
+    title: 'Chamois MyBellePlagne – Location appartement Belle Plagne',
+    description: `Appartement Chamois MyBellePlagne – Réservez directement sur MyBellePlagne.fr. Ski aux pieds, ${apartment.capacity} personnes.`,
+    keywords: 'chamois mybelleplagne, mybelleplagne chamois, location chamois belle plagne',
+  },
+  niddouillet: {
+    title: 'Nid Douillet MyBellePlagne – Location appartement Belle Plagne',
+    description: `Appartement Nid Douillet MyBellePlagne – Réservez directement sur MyBellePlagne.fr. Ski aux pieds, ${apartment.capacity} personnes.`,
+    keywords: 'nid douillet mybelleplagne, mybelleplagne nid douillet, location nid douillet belle plagne',
+  },
+  frontdeneige: {
+    title: 'Front de Neige MyBellePlagne – Location appartement Belle Plagne',
+    description: `Appartement Front de Neige MyBellePlagne – Réservez directement sur MyBellePlagne.fr. Ski aux pieds, ${apartment.capacity} personnes.`,
+    keywords: 'front de neige mybelleplagne, mybelleplagne front de neige, location front de neige belle plagne',
+  },
+};
+
+const meta = slugMeta[slug];
+
+return {
+  title: meta?.title || `Appartement – MyBellePlagne`,
+  description: meta?.description || '',
+  keywords: meta?.keywords || '',
+  openGraph: {
+    title: meta?.title || '',
+    description: meta?.description || '',
+    url: `https://www.mybelleplagne.fr/appartement/${slug}`,
+  },
+};
+}
+
+
 
 export default async function ApartmentPage({ params }) {
   // 1. Récupération du slug (Compatible Next.js 15)
