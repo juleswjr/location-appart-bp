@@ -2,7 +2,6 @@ import Link from 'next/link';
 import BookingForm from '@/components/BookingForm'; // Assure-toi que le chemin est bon
 import ApartmentGallery from "@/components/ApartmentGallery"; // Ton nouveau composant galerie
 import ContactSection from "@/components/ContactSection"; // Ton nouveau composant galerie
-import Chatbot from '@/components/Chatbot';
 import { 
   Check, Users, CalendarClock, 
   Ban, CigaretteOff, Cat, Accessibility, CableCar,ReceiptEuro
