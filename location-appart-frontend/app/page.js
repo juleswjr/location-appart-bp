@@ -52,8 +52,7 @@ export default async function Home() {
         <div className="absolute inset-0 bg-blue-900/40 z-10"></div>
         {/* Tu peux changer la couleur : bg-black/50, bg-blue-900/60, etc. */}
 
-        {/* NOTRE NOUVEAU CHATBOT */}
-        <Chatbot />
+        
         {/* 3. LE TEXTE (Au premier plan) */}
         <div className="relative z-20 mt-10">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">
@@ -131,6 +130,9 @@ export default async function Home() {
       <footer className="bg-gray-900 text-gray-400 py-8 text-center">
         <p>© 2026 MyBellePlagne - Tous droits réservés</p>
       </footer>
+
+      {/* NOTRE NOUVEAU CHATBOT */}
+        <Chatbot />
     </main>
   );
 }

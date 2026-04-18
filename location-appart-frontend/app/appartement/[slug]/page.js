@@ -80,8 +80,7 @@ return {
   },
 };
 }
-{/* NOTRE NOUVEAU CHATBOT */}
-        <Chatbot apartmentID={apartement.id} />
+
 
 
 export default async function ApartmentPage({ params }) {
@@ -292,7 +291,8 @@ export default async function ApartmentPage({ params }) {
           
         </div>
       </div>
-      
+      {/* NOTRE NOUVEAU CHATBOT */}
+        <Chatbot apartmentID={apartement.id} />
     </main>
   );
 }
