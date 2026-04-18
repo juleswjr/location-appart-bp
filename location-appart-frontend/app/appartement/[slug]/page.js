@@ -292,7 +292,7 @@ export default async function ApartmentPage({ params }) {
         </div>
       </div>
       {/* NOTRE NOUVEAU CHATBOT */}
-        <Chatbot apartmentID={apartement.id} />
+        <Chatbot apartmentId={apartement.id} />
     </main>
   );
 }
