@@ -3,6 +3,7 @@ import LocationSection from '../components/LocationSection';
 import ContactSection from '../components/ContactSection';
 import Navbar from '../components/Navbar';
 import ReviewsSection from '../components/ReviewsSection';
+import Chatbot from '@/components/Chatbot';
 export const dynamic = "force-dynamic";
 import Image from "next/image";
 async function getApartments() {
