@@ -105,8 +105,7 @@ export default async function ApartmentPage({ params }) {
 
   return (
     <main className="min-h-screen bg-gray-50 pb-20">
-      {/* NOTRE NOUVEAU CHATBOT */}
-        <Chatbot apartmentID={apartement.id} />
+      
       
 
       {/* --- MENU DE NAVIGATION SECONDAIRE --- */}
@@ -289,7 +288,8 @@ export default async function ApartmentPage({ params }) {
                 <BookingForm apartment={apartment} />
              </div>
           </div>
-
+          {/* NOTRE NOUVEAU CHATBOT */}
+        <Chatbot apartmentID={apartement.id} />
         </div>
       </div>
       
