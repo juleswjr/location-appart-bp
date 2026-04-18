@@ -93,3 +93,79 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Serveur démarré sur le port ${PORT}`);
 });
+
+// En haut de ton fichier avec tes autres imports
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// Initialisation de Google Gemini
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// ==========================================
+// 🤖 ROUTE POUR L'ASSISTANT IA (GEMINI)
+// ==========================================
+// Route pour l'assistant contextuel
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { message, apartmentId } = req.body; // On reçoit l'ID de l'appart en plus
+
+    // 1. ALLER CHERCHER LES INFOS DANS LA BDD
+    let apartmentContext = "";
+    
+    if (apartmentId) {
+      // On fait une requête SQL (exemple avec mysql2 ou ton système actuel)
+      const [rows] = await db.execute(
+        'SELECT name, description, features FROM apartments WHERE id = ?', 
+        [apartmentId]
+      );
+      
+      if (rows.length > 0) {
+        const appart = rows[0];
+        apartmentContext = `
+          L'utilisateur pose une question spécifique sur l'appartement suivant :
+          - Nom : ${appart.name}
+          - Description : ${appart.description}
+          - Équipements (Features) : ${appart.features}
+        `;
+      }
+    }
+
+
+    // 2. LES INFOS GÉNÉRALES DE LA CONCIERGERIE (Statiques ou depuis une autre table) 
+    const conciergeContext = `
+      Services de conciergerie (valables pour tous les logements) :
+      - Draps et serviettes : NON fournis. Location possible via la conciergerie.
+      - Ménage : À la charge du locataire.
+      - Accueil : Boitié à code pour les clés.
+      - Services plus : Réservation de forfaits, location de skis, cours ESF.
+      - Parking : possibilité de réservation à voir avec le service de conciergerie.
+    `;
+
+    // 3. CONSTRUCTION DU PROMPT FINAL
+    const systemPrompt = `
+      Tu es l'assistant virtuel de MyBellePlagne. 
+      Réponds de manière chaleureuse, précise et courte (max 3 phrases).
+      
+      ${apartmentContext}
+      
+      ${conciergeContext}
+
+      Consignes : 
+      - Si l'appartement est mentionné, utilise ses détails pour répondre.
+      - Si l'utilisateur demande quelque chose qui n'est pas précisé (ex: "y a-t-il un appareil à raclette ?"), 
+        réponds que tu ne sais pas mais qu'il peut prendre contact avec le propriétaire via le formulaire de contact présent sur les page d'appartements et d'accueil.
+    `;
+
+    // 4. APPEL À GEMINI
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      systemInstruction: systemPrompt 
+    });
+
+    const result = await model.generateContent(message);
+    res.json({ reply: result.response.text() });
+
+  } catch (error) {
+    console.error("Erreur Chat:", error);
+    res.status(500).json({ error: "Erreur technique" });
+  }
+});

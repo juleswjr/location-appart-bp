@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script"; // 👈 1. AJOUT DE L'IMPORT SCRIPT
-
+import Chatbot from "../components/Chatbot"; // Vérifie que le chemin est bon !
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -30,7 +30,8 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-
+      {/* NOTRE NOUVEAU CHATBOT */}
+        <Chatbot />
 {/* ========================================== */}
         {/* 👇 NOUVEAU BLOC : GTRANSLATE (PRO & GRATUIT) 👇 */}
         {/* ========================================== */}
