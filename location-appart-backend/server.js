@@ -157,7 +157,7 @@ app.post('/api/chat', async (req, res) => {
 
     // 4. APPEL À GEMINI
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-pro-latest",
+      model: "gemini-2.5-flash",
       systemInstruction: systemPrompt 
     });
 
