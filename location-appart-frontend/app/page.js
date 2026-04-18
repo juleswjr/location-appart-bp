@@ -131,8 +131,7 @@ export default async function Home() {
         <p>© 2026 MyBellePlagne - Tous droits réservés</p>
       </footer>
 
-      {/* NOTRE NOUVEAU CHATBOT */}
-        <Chatbot />
+     
     </main>
   );
 }

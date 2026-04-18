@@ -291,8 +291,7 @@ export default async function ApartmentPage({ params }) {
           
         </div>
       </div>
-      {/* NOTRE NOUVEAU CHATBOT */}
-        <Chatbot apartment={apartment} />
+      
     </main>
   );
 }
