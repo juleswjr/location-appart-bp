@@ -51,7 +51,8 @@ export default async function Home() {
         <div className="absolute inset-0 bg-blue-900/40 z-10"></div>
         {/* Tu peux changer la couleur : bg-black/50, bg-blue-900/60, etc. */}
 
-
+        {/* NOTRE NOUVEAU CHATBOT */}
+        <Chatbot />
         {/* 3. LE TEXTE (Au premier plan) */}
         <div className="relative z-20 mt-10">
           <h1 className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">
