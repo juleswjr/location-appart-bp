@@ -284,7 +284,6 @@ export default function BookingForm({ apartment }) {
         <div><label className="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" name="customer_email" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_email} /></div>
         <div className="grid grid-cols-2 gap-4">
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label><input type="tel" name="customer_phone" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_phone} /></div>
-          <div><label className="block text-sm font-medium text-gray-700 mb-1">Date de naissance</label><input type="date" name="customer_dob" required className="w-full border p-2 rounded text-gray-500" onChange={handleChange} value={formData.customer_dob} /></div>
         </div>
         <div><label className="block text-sm font-medium text-gray-700 mb-1">Adresse postale</label><input type="text" name="customer_address" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_address} /></div>
         <div><label className="block text-sm font-medium text-gray-700 mb-1">Message</label><textarea name="message" rows="3" className="w-full border p-2 rounded" onChange={handleChange} value={formData.message}></textarea></div>
