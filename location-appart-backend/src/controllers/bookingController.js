@@ -105,15 +105,17 @@ exports.createBooking = async (req, res) => {
 
     // 5. CRÉATION DU PDF
     const pdfPath = await generateContractPDF({
-      customer_name,
-      customer_email,
-      customer_phone,
-      customer_address,
-      apartment_name: apartment.name,
-      start_date: normalizedStartDate,
-      end_date: normalizedEndDate,
-      total_price: finalPrice, // ✅ Prix calculé par le service
-      has_parking: has_parking
+        apartment_id,        // ✅ Ajoute ça si ce n'est pas déjà là
+        customer_name,
+        customer_email,
+        customer_phone,
+        customer_address,
+        apartment_name: apartment.name,
+        start_date: normalizedStartDate,
+        end_date: normalizedEndDate,
+        total_price: finalPrice,
+        has_parking,
+        capacity: apartment.capacity 
     });
 
     // 6. INSERTION EN BDD (avec dates normalisées)
