@@ -82,41 +82,38 @@ exports.generateContractPDF = async (data) => {
     };
 
     // ─── EN-TÊTE ───────────────────────────────────────────
-    doc.fontSize(16).font('Helvetica-Bold').text('CONTRAT DE LOCATION', { align: 'center' });
-    doc.moveDown(1.5);
+doc.fontSize(16).font('Helvetica-Bold').text('CONTRAT DE LOCATION', { align: 'center' });
+doc.moveDown(1.5);
 
-    // Deux colonnes : Loueur / Locataire
-    const leftX = 50;
-    const rightX = 320;
-    let currentY = doc.y;
-
-    doc.fontSize(10).font('Helvetica-Bold').text('Le Loueur :', leftX, currentY);
-    doc.font('Helvetica')
-      .text('M. Pierre WEJROCH', leftX, doc.y)
-      .text('Chemin du Bois de Maud', leftX, doc.y)
-      .text('26200 MONTELIMAR', leftX, doc.y);
-
-    const loueurEndY = doc.y;
-
-    doc.fontSize(10).font('Helvetica-Bold').text('Le Locataire :', rightX, currentY);
-    doc.font('Helvetica')
-      .text(data.customer_name, rightX, doc.y)
-      .text(data.customer_address || '', rightX, doc.y)
-      .text(`Tél. ${data.customer_phone || ''}`, rightX, doc.y)
-      .text(`Mail : ${data.customer_email || ''}`, rightX, doc.y);
-
-    doc.y = Math.max(loueurEndY, doc.y) + 20;
-
-    doc.y = Math.max(loueurEndY, doc.y) + 20;
-
-// ─── ADRESSE DE LOCATION ───────────────────────────────
-doc.fontSize(10).font('Helvetica-Bold').text('Adresse de location :', 50, doc.y);
+// Loueur
+doc.fontSize(10).font('Helvetica-Bold').text('Le Loueur :', 50);
 doc.font('Helvetica')
-  .text(`Résidence ${buildingName}`, 50, doc.y)
-  .text(`Appartement ${apartmentNumber}`, 50, doc.y)
-  .text('73210 BELLE PLAGNE', 50, doc.y);
+  .text('M. Pierre WEJROCH', 50)
+  .text('Chemin du Bois de Maud', 50)
+  .text('26200 MONTELIMAR', 50);
 
 doc.moveDown();
+
+// Locataire
+doc.fontSize(10).font('Helvetica-Bold').text('Le Locataire :', 50);
+doc.font('Helvetica')
+  .text(data.customer_name, 50)
+  .text(data.customer_address || '', 50)
+  .text(`Tél. ${data.customer_phone || ''}`, 50)
+  .text(`Mail : ${data.customer_email || ''}`, 50);
+
+doc.moveDown();
+
+// ─── ADRESSE DE LOCATION ───────────────────────────────
+doc.fontSize(10).font('Helvetica-Bold').text('Adresse de location :', 50);
+doc.font('Helvetica')
+  .text(`Résidence ${buildingName}`, 50)
+  .text(`Appartement ${apartmentNumber}`, 50)
+  .text('73210 BELLE PLAGNE', 50);
+
+doc.moveDown();
+
+
 
 // ─── DATES ET PRIX ─────────────────────────────────────
 doc.fontSize(10).font('Helvetica-Bold').text('Dates du séjour et prix :', 50, doc.y);
