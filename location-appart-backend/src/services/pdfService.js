@@ -107,24 +107,26 @@ exports.generateContractPDF = async (data) => {
 
     doc.y = Math.max(loueurEndY, doc.y) + 20;
 
-    // ─── ADRESSE DE LOCATION ───────────────────────────────
-    doc.fontSize(10).font('Helvetica-Bold').text('Adresse de location :');
-    doc.font('Helvetica')
-      .text(`Résidence ${buildingName}`)
-      .text(`Appartement ${apartmentNumber}`)
-      .text('73210 BELLE PLAGNE');
+    doc.y = Math.max(loueurEndY, doc.y) + 20;
 
-    doc.moveDown();
+// ─── ADRESSE DE LOCATION ───────────────────────────────
+doc.fontSize(10).font('Helvetica-Bold').text('Adresse de location :', 50, doc.y);
+doc.font('Helvetica')
+  .text(`Résidence ${buildingName}`, 50, doc.y)
+  .text(`Appartement ${apartmentNumber}`, 50, doc.y)
+  .text('73210 BELLE PLAGNE', 50, doc.y);
 
-    // ─── DATES ET PRIX ─────────────────────────────────────
-    doc.fontSize(10).font('Helvetica-Bold').text('Dates du séjour et prix :');
-    doc.font('Helvetica')
-      .text(`Du ${startStr} à 16h au ${endStr} à 10h`)
-      .text(`Prix : ${totalPrice} €`)
-      .text(`Nombre d'occupants maximum : ${capacity}`)
-      .text(`Dépôt de garantie : ${caution} €`);
+doc.moveDown();
 
-    doc.moveDown();
+// ─── DATES ET PRIX ─────────────────────────────────────
+doc.fontSize(10).font('Helvetica-Bold').text('Dates du séjour et prix :', 50, doc.y);
+doc.font('Helvetica')
+  .text(`Du ${startStr} à 16h au ${endStr} à 10h`, 50, doc.y)
+  .text(`Prix : ${totalPrice} €`, 50, doc.y)
+  .text(`Nombre d'occupants maximum : ${capacity}`, 50, doc.y)
+  .text(`Dépôt de garantie : ${caution} €`, 50, doc.y);
+
+doc.moveDown();
 
     // ─── ARTICLES ──────────────────────────────────────────
     addSection('Art. 1 Objet du contrat');
