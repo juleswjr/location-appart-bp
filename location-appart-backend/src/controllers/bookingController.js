@@ -132,7 +132,7 @@ exports.createBooking = async (req, res) => {
           customer_email, 
           customer_phone, 
           customer_address, 
-          customer_dob, 
+           
           message,
           contract_url: pdfPath
         }])
