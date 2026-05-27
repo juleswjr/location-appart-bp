@@ -7,13 +7,15 @@ import DatePicker from 'react-datepicker';
 import { fr } from 'date-fns/locale';
 import 'react-datepicker/dist/react-datepicker.css';
 
-
+import Link from 'next/link';
 export default function AdminDashboard() {
   const [bookings, setBookings] = useState([]);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [editingBooking, setEditingBooking] = useState(null);
+  
   // 1. Vérifier si on est connecté
+
   useEffect(() => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
