@@ -282,7 +282,7 @@ export default async function ApartmentPage({ params }) {
 
           {/* COLONNE DROITE (Formulaire Fixe) */}
           <div className="lg:col-span-1">
-             <div className="sticky top-24">
+             <div >
                 {/* On passe l'objet apartment complet au formulaire */}
                 <BookingForm apartment={apartment} />
              </div>
