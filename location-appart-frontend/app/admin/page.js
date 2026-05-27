@@ -373,6 +373,12 @@ const StarRating = ({ booking, onSave }) => {
           >
              Exporter Compta
           </button>
+          <Link
+            href="/admin/prices"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow flex items-center gap-2 font-bold transition-transform hover:scale-105"
+          >
+            💰 Gérer les prix
+          </Link>
         </div>
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="w-full text-left border-collapse">
