@@ -12,7 +12,7 @@ exports.generateContractPDF = async (data) => {
     try {
       const { data: aptData, error } = await supabase
         .from('apartments')
-        .select('number, building, capacity')//, caution
+        .select('number, building, capacity')
         .eq('id', data.apartment_id)
         .single();
 
@@ -20,7 +20,6 @@ exports.generateContractPDF = async (data) => {
         apartmentNumber = aptData.number || '';
         buildingName = aptData.building || '';
         capacity = aptData.capacity || capacity;
-        //caution = aptData.caution || 0;
       }
     } catch (e) {
       console.error('Erreur récupération infos appart:', e.message);
@@ -65,6 +64,7 @@ exports.generateContractPDF = async (data) => {
     const acompte = (totalPrice / 2).toFixed(2);
     const solde = (totalPrice / 2).toFixed(2);
     const caution = (totalPrice / 2).toFixed(2);
+
     const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
     const startStr = new Date(data.start_date + 'T12:00:00').toLocaleDateString('fr-FR', dateOptions);
     const endStr = new Date(data.end_date + 'T12:00:00').toLocaleDateString('fr-FR', dateOptions);
