@@ -510,7 +510,7 @@ exports.sendContractToOwner = async (bookingInfo, contractUrl) => {
           <li><strong>Du :</strong> ${start_date}</li>
           <li><strong>Au :</strong> ${end_date}</li>
           <li><strong>Prix total :</strong> ${total_price / 100} €</li>
-          <li><strong>Parking :</strong> ${has_parking ? "Oui" : "Non"}</li>
+          
         </ul>
       </div>
     `,

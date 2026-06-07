@@ -32,7 +32,8 @@ export default function BookingForm({ apartment }) {
 
   const [formData, setFormData] = useState({
     customer_name: "", customer_email: "", customer_phone: "",
-    customer_address: "", customer_dob: "", message: ""
+    customer_address: "", customer_dob: "", message: "",
+    adults_count: "", children_count: ""
   });
 
   const [fullyBookedDates, setFullyBookedDates] = useState([]);
@@ -281,6 +282,34 @@ export default function BookingForm({ apartment }) {
       {/* INFOS CLIENT */}
       <div className="space-y-4 mt-8">
         <div><label className="block text-sm font-medium text-gray-700 mb-1">Nom complet</label><input type="text" name="customer_name" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_name} /></div>
+        <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre d'adultes</label>
+          <input 
+            type="number" 
+            name="adults_count" 
+            min="1" 
+            max={apartment.capacity}
+            required 
+            className="w-full border p-2 rounded" 
+            onChange={handleChange} 
+            value={formData.adults_count || ''} 
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Nombre d'enfants</label>
+          <input 
+            type="number" 
+            name="children_count" 
+            min="0" 
+            max={apartment.capacity}
+            required 
+            className="w-full border p-2 rounded" 
+            onChange={handleChange} 
+            value={formData.children_count || ''} 
+          />
+        </div>
+      </div>
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label><input type="tel" name="customer_phone" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_phone} /></div>
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" name="customer_email" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_email} /></div>
 
