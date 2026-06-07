@@ -12,7 +12,7 @@ exports.generateContractPDF = async (data) => {
     try {
       const { data: aptData, error } = await supabase
         .from('apartments')
-        .select('number, building, capacity')
+        .select('number, building, capacity,caution')
         .eq('id', data.apartment_id)
         .single();
 
@@ -20,6 +20,7 @@ exports.generateContractPDF = async (data) => {
         apartmentNumber = aptData.number || '';
         buildingName = aptData.building || '';
         capacity = aptData.capacity || capacity;
+        caution=aptData.caution||500;
       }
     } catch (e) {
       console.error('Erreur récupération infos appart:', e.message);
@@ -67,7 +68,7 @@ exports.generateContractPDF = async (data) => {
     const totalPrice = data.total_price / 100;
     const acompte = (totalPrice / 2).toFixed(2);
     const solde = (totalPrice / 2).toFixed(2);
-    const caution = (totalPrice / 2).toFixed(2);
+    //const caution = (totalPrice / 2).toFixed(2);
 
     const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
     const startStr = new Date(data.start_date + 'T12:00:00').toLocaleDateString('fr-FR', dateOptions);
@@ -180,7 +181,7 @@ doc.moveDown();
     doc.addPage();
     doc.fontSize(11).font('Helvetica-Bold').text('Modalités de réservation :');
     doc.font('Helvetica').fontSize(10);
-    addParagraph(`La réservation prendra effet dès réception de :\n- Un exemplaire du contrat signé\n- Un acompte de 50% du montant total, hors taxe de séjour (réglé par virement), soit ${acompte} €\n- Une caution (formalités à accomplir auprès du prestataire internet).\n\nLe Locataire s'engage à verser le solde de la location et le montant de la taxe de séjour au plus tard 30 jours avant la date de début de la location, soit ${solde+taxeSejour} €.\n\nLe locataire déclare avoir pris connaissance des conditions générales de location ci-dessus.`);
+    addParagraph(`La réservation prendra effet dès réception de :\n- Un exemplaire du contrat signé\n- Un acompte de 50% du montant total, hors taxe de séjour (réglé par virement), soit ${acompte} €\n- Une caution (formalités à accomplir auprès du prestataire internet).\n\nLe Locataire s'engage à verser le solde de la location et le montant de la taxe de séjour au plus tard 30 jours avant la date de début de la location, soit ${solde+taxeSejour*100} €.\n\nLe locataire déclare avoir pris connaissance des conditions générales de location ci-dessus.`);
 
     doc.moveDown();
     addParagraph(`Fait à ............, le ........`);
