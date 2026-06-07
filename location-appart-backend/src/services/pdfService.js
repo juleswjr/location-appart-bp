@@ -12,7 +12,7 @@ exports.generateContractPDF = async (data) => {
     try {
       const { data: aptData, error } = await supabase
         .from('apartments')
-        .select('number, building, capacity')
+        .select('number, building, capacity, caution')
         .eq('id', data.apartment_id)
         .single();
 
@@ -63,7 +63,7 @@ exports.generateContractPDF = async (data) => {
     const totalPrice = data.total_price / 100;
     const acompte = (totalPrice / 2).toFixed(2);
     const solde = (totalPrice / 2).toFixed(2);
-    const caution = (totalPrice / 2).toFixed(2);
+    const caution = aptData?.caution || 0;
 
     const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
     const startStr = new Date(data.start_date + 'T12:00:00').toLocaleDateString('fr-FR', dateOptions);
@@ -135,15 +135,15 @@ doc.moveDown();
     addParagraph(`Le présent contrat a pour objet de définir les conditions de location des lieux identifiés ci-après par le Loueur au Locataire pour la durée et aux conditions déterminées aux présentes. Ces conditions sont conformes aux règlements et lois applicables aux locations de meublés. La réservation vaut acceptation de ces conditions de vente.`);
 
     addSection('Art. 2 Désignation des biens loués');
-    addParagraph(`Les lieux loués sont situés à Belle Plagne, résidence ${buildingName}, appartement ${apartmentNumber}, 73210 La Plagne Tarentaise. Il s'agit d'un appartement meublé pour ${capacity} personnes avec un balcon, un casier à ski. Les lieux loués sont prévus pour ${capacity} personnes au maximum. Dans le cas où le nombre d'occupants envisagés serait supérieur, le Locataire s'engage à demander l'accord préalable du Loueur. En cas d'acceptation, le Loueur facturera une surcharge de location de 150 € par jour par locataire.`);
+    addParagraph(`Les biens loués sont situés à Belle Plagne, résidence ${buildingName}, appartement ${apartmentNumber}, 73210 La Plagne Tarentaise. Il s'agit d'un appartement meublé pour ${capacity} personnes avec un balcon, un casier à ski. Les lieux loués sont prévus pour ${capacity} personnes au maximum. Dans le cas où le nombre d'occupants envisagés serait supérieur, le Locataire s'engage à demander l'accord préalable du Loueur. En cas d'acceptation, le Loueur facturera une surcharge de location de 150 € par jour par locataire.`);
 
     addSection('Art. 3 Durée de la location');
-    addParagraph(`La location est conclue du ${startStr} à 16h (date d'entrée) au ${endStr} jusqu'à 10h (date de sortie). Le Locataire ne peut en aucun cas se prévaloir du droit de maintien dans les lieux loués à l'expiration de la période de location prévue. En cas de dépassement non autorisé, un montant de 150 € sera facturé au Locataire par heure supplémentaire d'occupation des lieux loués.`);
+    addParagraph(`La location est conclue du ${startStr} à 16h (date d'entrée) au ${endStr} jusqu'à 10h (date de sortie). Le Locataire ne peut en aucun cas se prévaloir du droit de maintien dans les lieux loués à l'expiration de la période de location prévue. En cas de dépassement non autorisé de la location par rapport à la date et heure de sortie mentionnée ci-dessus, un montant de 150 € sera facturé au Locataire par heure supplémentaire d'occupation des lieux loués.`);
 
     addSection('Art. 4 Loyer');
     doc.fontSize(10).font('Helvetica-Bold').text('Art. 4.1 Montant et paiement du loyer');
     doc.font('Helvetica');
-    addParagraph(`La présente location est consentie pour un loyer de ${totalPrice} €. Le Locataire versera au Loueur 50% du prix de location (${acompte} €) au moment de la réservation. Il s'engage à verser le solde (${solde} €) au plus tard 30 jours avant la date de début de la location.`);
+    addParagraph(`La présente location est consentie pour un loyer de ${totalPrice} €. Les modalités de validation de la réervation sont précisées en dernière page du présent contrat. Le Locataire versera au Loueur 50% du prix de location (${acompte} €) au moment de la réservation. Il s'engage à verser le solde (${solde} €) au plus tard 30 jours avant la date de début de la location.`);
 
     doc.moveDown(0.3);
     doc.fontSize(10).font('Helvetica-Bold').text('Art. 4.2 Taxe de séjour');
@@ -153,31 +153,33 @@ doc.moveDown();
     doc.moveDown(0.3);
     doc.fontSize(10).font('Helvetica-Bold').text('Art. 4.3 Dépôt de garantie');
     doc.font('Helvetica');
-    addParagraph(`Le Locataire versera au Loueur un dépôt de garantie d'un montant de ${caution} €. Si aucune dégradation n'était constatée, le dépôt de garantie sera restitué au plus tard 4 semaines suivant la date de sortie. Dans le cas contraire, le solde sera restitué déduction faite des frais de remise en état, dans un délai maximum de 3 mois.`);
+    addParagraph(`Le Locataire versera au Loueur un dépôt de garantie en sus du loyer d'un montant de ${caution} €. Le dépôt de garantie à pour objet de couvrir les réparations ou remise en état qui seraient nécessaires suite au départ du locataire. Le dépôt de garantie ne doit pas être considéré comme une participation au paiement du loyer. Si aucune dégradation n'était constatée, le dépôt de garantie sera restitué par le loueur au locataire au plus tard 4 semaines suivant la date de sortie. Dans le cas contraire, le solde du dépôt de garantie sera restitué au locataire, déduction faite des frais de remise en état, dans un délai maximum de 3 mois après la date de sortie. Le montant de remise en état sera déterminé à l'amiable entre le loueur et le locataire. En cas de désaccord, un devis de remise en état sera effectué par un professionnel ou autre organisme habilité au choix du loueur et indépendant de celui-ci. Le locataire s'engage à régler le surplus si les frais de remise en état étaient supérieurs au dépôt de garantie.`);
 
     addSection('Art. 5 Utilisation des lieux loués');
-    addParagraph(`Les lieux loués sont destinés à l'habitation familiale. L'appartement est non fumeur. La sous-location est interdite. Les animaux ne sont pas acceptés, leur présence entraînerait la rupture immédiate du présent contrat. En cas de perte d'un trousseau de clé, il vous sera demandé 100 €.`);
+    addParagraph(`Les lieux loués sont destinés à l'habitation familiale et doivent être occupés par le locataire en "bon père de famille". L'appartement est non fumeur. La sous-location est interdite. Les animaux ne sont pas acceptés, leur présence entraînerait la rupture immédiate du présent contrat. En cas de perte d'un trousseau de clé, il vous sera demandé 100 €.`);
 
     addSection('Art. 6 État des lieux et inventaire');
-    addParagraph(`Un état des lieux sera effectué à l'entrée du Locataire par le service de conciergerie. Si le Locataire constatait un manque ou défaut important, il serait tenu d'en informer le concierge au plus tard le lendemain du jour d'arrivée.`);
+    addParagraph(`Un état des lieux sera effectué à l'entrée du Locataire par le service de conciergerie. Si le Locataire constatait un manque ou défaut important de l'appartement, une casse ou dégradation présente à son entrée, il serait tenu d'en informer le concierge. Dans le cas où ce manque, défaut, dégradation ne serait pas communiqué au plus tard le lendemain du jour d'arrivée par le locataire, le loueur considèrera le locataire à l'origine de ce manque, défaut, dégradation.`);
 
     addSection('Art. 7 Conditions d\'annulation');
-    addParagraph(`Toute annulation doit être notifiée par lettre recommandée dans les meilleurs délais.\n- Plus de 60 jours avant la date d'entrée : restitution totale de l'acompte.\n- Entre 60 et 30 jours : le Loueur conserve la totalité de l'acompte.\n- Moins de 30 jours : l'ensemble du prix du séjour est dû.\nSi le voyageur ne verse pas le solde au plus tard 30 jours avant le début de la location, la réservation sera considérée comme annulée entre 30 et 60 jours.`);
+    addParagraph(`Toute annulation doit être notifiée par lettre recommandée dans les meilleurs délais.\n En cas d'annulation par le locataire : \n- Plus de 60 jours avant la date d'entrée, le loueur restitura la totalité de l'accompte versé par le locataire dans un délais maximum de deux semaines après la réception de la notification.\n- Entre 60 et 30 jours, le Loueur conservera la totalité de l'acompte.\n- Moins de 30 jours avant la date d'entrée, l'ensemble du prix du séjour sera dû au loueur.\nEn cas d'interruption anticipée du séjour par le locataire, et si la responsabilité du loueur n'est pas mise en cause, il ne sera procédé à aucun remboursement, hormis celui du dépôt de garantie aux conditions définies ci-dessus.\nSi le voyageur ne verse pas le solde de la location au plus tard 30 jours avant le début de la période de location, la réservation sera considérée comme annulée entre 30 et 60 jours avant la date d'entrée. Le loueur conservera dans ce cas la totalité de l'accompte.\nSi le locataire annule son séjour moins de 30 jours avant la date d'entrée et que la totalité des frais de séjour a été réglée, le loueur remboursera au locataire le montant de la taxe de séjour dans un délais maximum de 2 semaines après la réception de la notification.`);
 
     addSection('Art. 8 Assurance');
-    addParagraph(`L'assurance villégiature est obligatoire. Il appartient au Locataire de vérifier qu'il est assuré pour l'incendie, dégâts des eaux et responsabilité civile. Tous vols durant la période de location seront à la charge du Locataire.`);
+    addParagraph(`L'assurance villégiature est obligatoire. Elle est généralement comprise dans l'assurance de votre logement. Il appartient au Locataire de vérifier qu'il est assuré pour l'incendie, dégâts des eaux et responsabilité civile. Dans l'hypothèse contraire, le locataire doit souscrire l'extension nécessaire. Tous vols durant la période de location seront à la charge du Locataire.`);
 
     addSection('Art. 9 Arrivée et départ');
-    addParagraph(`Le lieu de remise des clés vous sera transmis après la réception du solde du loyer. Le locataire s'engage à laisser l'appartement dans l'état de propreté dans lequel il l'a trouvé. Merci de contacter le service de conciergerie avant votre arrivée pour préciser les modalités de remise des clés.`);
+    addParagraph(`Le lieu de remise des clés vous sera transmis après la réception du solde du loyer. Le locataire s'engage à laisser l'appartement dans l'état de propreté et de rangement dans lequel il l'a trouvé. Le locataire informera le loueur si les lieux ne sont pas propre à son arrivée.`);
+    addSection('Formalités avec la conciergerie');
+    addParagraph(`Merci de contacter le serve de conciergerie avant votre arrivée pour préciser les modalités de remise des clés et état des lieux. Il en sera de même pour fixer la fin du séjour.`);
 
     // ─── MODALITÉS DE RÉSERVATION ──────────────────────────
     doc.addPage();
     doc.fontSize(11).font('Helvetica-Bold').text('Modalités de réservation :');
     doc.font('Helvetica').fontSize(10);
-    addParagraph(`La réservation prendra effet dès réception de :\n- Un exemplaire du contrat signé\n- Un acompte de 50% du montant total, hors taxe de séjour (réglé par virement), soit ${acompte} €\n- Une caution (formalités à accomplir auprès du prestataire internet).\n\nLe Locataire s'engage à verser le solde de la location et le montant de la taxe de séjour au plus tard 30 jours avant la date de début de la location, soit ${solde} €.\n\nLe locataire déclare avoir pris connaissance des conditions générales de location ci-dessus.`);
+    addParagraph(`La réservation prendra effet dès réception de :\n- Un exemplaire du contrat signé\n- Un acompte de 50% du montant total, hors taxe de séjour (réglé par virement), soit ${acompte} €\n- Une caution (formalités à accomplir auprès du prestataire internet).\n\nLe Locataire s'engage à verser le solde de la location et le montant de la taxe de séjour au plus tard 30 jours avant la date de début de la location, soit ${solde+taxeSejour} €.\n\nLe locataire déclare avoir pris connaissance des conditions générales de location ci-dessus.`);
 
     doc.moveDown();
-    addParagraph(`Fait à ............, le ${todayStr}.`);
+    addParagraph(`Fait à ............, le ........`);
     addParagraph(`Faire précéder la signature de la mention « lu et approuvé » avec paraphes en bas de chaque page.`);
 
     doc.moveDown(3);
