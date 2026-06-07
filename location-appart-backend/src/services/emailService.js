@@ -282,6 +282,8 @@ exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
   console.log("\n📧 ========== CONFIRMATION CLIENT ==========");
   
   try {
+    const pdfResponse = await fetch(contractUrl);
+    const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
     const { data: result, error } = await resend.emails.send({
   from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
   to: email,
