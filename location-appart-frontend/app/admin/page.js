@@ -101,6 +101,22 @@ export default function AdminDashboard() {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       window.location.href = `${apiUrl}/api/accounting/export`;
     };
+
+  const handleDelete = async (id) => {
+  if (!confirm("Supprimer définitivement cette réservation ?")) return;
+  const { error } = await supabase.from('bookings').delete().eq('id', id);
+  if (error) { alert("Erreur suppression"); return; }
+  setBookings(prev => prev.filter(b => b.id !== id));
+};
+const handleStatusChange = async (id, newStatus) => {
+  if (!confirm(`Passer cette résa en "${newStatus}" ?`)) return;
+  const { error } = await supabase
+    .from('bookings')
+    .update({ status: newStatus })
+    .eq('id', id);
+  if (error) { alert("Erreur"); return; }
+  setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+};
 // 4. Sauvegarde des emails personnalisés (DIRECT SUPABASE) 🚀
   const saveCustomEmails = async (id, data) => {
     console.log('📧 Sauvegarde des emails pour:', id, data);
@@ -391,7 +407,7 @@ const StarRating = ({ booking, onSave }) => {
                 <th className="p-4 border-b">Client</th>
                 <th className="p-4 border-b">Dates</th>
                 <th className="p-4 font-semibold w-40">Paiement (€)</th>
-                <th className="p-4 border-b">Acompte</th>
+                <th className="p-4 border-b">Caution</th>
                 <th className="p-4 border-b text-right">Actions</th>
                 <th className="p-4 border-b">Note</th>
               </tr>
@@ -480,24 +496,44 @@ const StarRating = ({ booking, onSave }) => {
                       </div>
                     </div>
                   </td>
+                  {/* CAUTION */}
                   <td className="p-4 border-b">
-                    <label className="flex items-center gap-2 cursor-pointer" title="Bloquer l'envoi du mail d'acompte">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
-                        checked={booking.skip_deposit_email || false}
-                        onChange={() => toggleEmailStatus(booking.id, 'skip_deposit_email', booking.skip_deposit_email)}
-                        className="w-4 h-4 accent-red-500"
+                        checked={booking.caution_paid || false}
+                        onChange={() => toggleEmailStatus(booking.id, 'caution_paid', booking.caution_paid)}
+                        className="w-4 h-4 accent-green-500"
                       />
                       <span className="text-xs text-gray-500">
-                        {booking.sent_deposit_email 
-                          ? '✅ Envoyé' 
-                          : booking.skip_deposit_email 
-                          ? '🚫 Bloqué' 
-                          : '⏳ En attente'}
+                        {booking.caution_paid ? '✅ Payée' : '⏳ En attente'}
                       </span>
                     </label>
                   </td>
                   <td className="p-4 border-b text-right space-x-2">
+
+                    {/* CROIX SUPPRESSION */}
+                    <button
+                      onClick={() => handleDelete(booking.id)}
+                      className="text-gray-300 hover:text-red-500 text-lg font-bold mr-2"
+                      title="Supprimer cette réservation"
+                    >
+                      ✕
+                    </button>
+
+                    {/* CHANGEMENT STATUT MANUEL */}
+                    <select
+                      value={booking.status}
+                      onChange={(e) => handleStatusChange(booking.id, e.target.value)}
+                      className="text-xs border rounded p-1 text-gray-600 mr-2"
+                    >
+                      <option value="pending">En attente</option>
+                      <option value="confirmed">Validé</option>
+                      <option value="rejected">Refusé</option>
+                    </select>
+
+
+
                     {booking.status === 'pending' && (
                       <>
 
@@ -522,6 +558,12 @@ const StarRating = ({ booking, onSave }) => {
                         </button>
                       </>
                     )}
+                     {/* INFO CONTRAT ENVOYÉ */}
+                      {booking.contract_sent_at && (
+                        <div className="text-xs text-green-600 mt-1">
+                          📄 Contrat envoyé le {new Date(booking.contract_sent_at + 'T12:00:00').toLocaleDateString('fr-FR')}
+                        </div>
+                      )}
                     {booking.status === 'confirmed' && (
                        <span className="text-gray-400 text-sm italic">Réservation validée ✅
                        <button onClick={() => handleSendContract(booking.id)}

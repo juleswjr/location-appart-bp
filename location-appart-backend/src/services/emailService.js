@@ -252,7 +252,7 @@ exports.sendNewBookingNotification = async (data) => {
               <p><strong>Client :</strong> ${data.customer_name}</p>
               <p><strong>Dates :</strong> du ${data.start_date} au ${data.end_date}</p>
               <p><strong>Prix total :</strong> ${data.total_price/100} €</p>
-              <p><strong>Parking :</strong> ${data.has_parking}</p>
+              
           </div>
           <br>
           <p>👉 <a href="https://www.mybelleplagne.fr/admin">Accéder au centre de contrôle</a></p>
@@ -287,32 +287,16 @@ exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
     const { data: result, error } = await resend.emails.send({
   from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
   to: email,
-  subject: `✅ Réservation Prise en compte - ${details.apartment_name}`,
-  attachments: [
-        {
-          filename: `contrat-${name.replace(/\s+/g, '-')}.pdf`,
-          content: pdfBuffer,
-        }
-      ],
+  subject: `✅ Réservation Confirmée - ${details.apartment_name}`,
   html: `
     <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; line-height: 1.6;">
-      <p>Bonjour ${name},</p>
+      <p>Bonjour,</p>
 
-      <p>Votre demande de réservation pour l'appartement <strong>${details.apartment_name}</strong> du <strong>${details.start_date}</strong> au <strong>${details.end_date}</strong> est prise en compte.</p>
+      <p>Nous avons bien reçu votre contrat, ainsi que le virement de l’acompte pour l'appartement <strong>${details.apartment_name}</strong> du <strong>${details.start_date}</strong> au <strong>${details.end_date}</strong>.</p>
 
-      <p>Je vous prie de trouver ci-joint le contrat de location pour l'appartement de Belle Plagne, où nous serons heureux de vous accueillir.</p>
+      <p>Votre réservation est validée.</p>
 
-      <p>Vous retrouverez en dernière page du contrat les modalités de réservation.</p>
-
-      <p>Pour valider la location, je vous demanderais de me renvoyer le contrat signé et de verser un acompte de 50 % du prix par virement bancaire.<br>
-      Je vous adresse un RIB par SMS pour le virement.</p>
-
-      <p>Par la suite, je vous remercie de régler le solde du séjour au plus tard un mois avant la date de début de la location.</p>
-
-      <p>Pour valider la caution, vous recevrez un mail un mois avant le début de votre séjour avec un lien sécurisé (aucune somme ne sera débitée sur votre compte).<br>
-      </p>
-
-      <p>En restant à votre disposition pour toute précision complémentaire,</p>
+      <p>Pour toutes les questions pratiques, concernant l’organisation de votre séjour, vous pouvez contacter directement à le service de conciergerie au <strong>0612575135</strong>.</p>
 
       <p>Bien cordialement,<br>
       <strong>Pierre Wejroch</strong></p>
@@ -332,6 +316,63 @@ exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
     throw err;
   }
 };
+
+//Mail d'acceptation 
+exports.sendContractToClient = async (clientEmail, clientName, details, contractUrl) => {
+  console.log("\n📧 ========== CONTRAT CLIENT ==========");
+
+  try {
+    const pdfResponse = await fetch(contractUrl);
+    const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
+
+    const { data: result, error } = await resend.emails.send({
+      from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
+      to: clientEmail,
+      subject: `📄 Location prise en compte – ${details.apartment_name}`,
+      attachments: [
+        {
+          filename: `contrat-${clientName.replace(/\s+/g, '-')}.pdf`,
+          content: pdfBuffer,
+        }
+      ],
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; line-height: 1.6;">
+          <p>Bonjour ${clientName},</p>
+
+          <p>Votre demande de réservation pour l'appartement <strong>${details.apartment_name}</strong> du <strong>${details.start_date}</strong> au <strong>${details.end_date}</strong> est prise en compte.</p>
+
+          <p>Je vous prie de trouver ci-joint le contrat de location pour l'appartement de Belle Plagne, où nous serons heureux de vous accueillir.</p>
+
+          <p>Vous retrouverez en dernière page du contrat les modalités de réservation.</p>
+
+          <p>Pour valider la location, je vous demanderais de me renvoyer le contrat signé et de verser un acompte de 50 % du prix par virement bancaire.<br>
+          Je vous adresse un RIB par SMS pour le virement.</p>
+
+          <p>Par la suite, je vous remercie de régler le solde du séjour au plus tard un mois avant la date de début de la location.</p>
+
+          <p>Il conviendra également de réaliser les formalités pour la caution une semaine avant le début de la location.<br>
+          Vous recevrez un mail avec un lien pour une préautorisation bancaire (aucune somme ne sera débitée sur votre compte).</p>
+
+          <p>Restant à votre disposition pour toute précision complémentaire,</p>
+
+          <p>Bien cordialement,<br>
+          <strong>Pierre Wejroch</strong></p>
+        </div>
+      `
+    });
+
+    if (error) throw error;
+    console.log("✅ Contrat envoyé au client via Resend");
+    console.log("========================================\n");
+    return result;
+
+  } catch (err) {
+    console.error("❌ Erreur:", err.message);
+    throw err;
+  }
+};
+
+
 
 // 3. Mail de demande reçue au CLIENT
 exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetails, pdfUrl) => {
@@ -420,24 +461,29 @@ exports.sendBookingRejectedEmail = async (clientEmail, clientName, apartmentName
 };
 
 exports.sendDepositReminderEmail = async (clientEmail, clientName, details) => {
-  const { apartment_name, start_date, total_price, deposit_amount } = details;
+  const { apartment_name, start_date, end_date, total_price } = details;
 
-  const dateStr = new Date(start_date + 'T12:00:00') // ✅ Fix UTC : on force midi
-    .toLocaleDateString('fr-FR');
+  const startStr = new Date(start_date + 'T12:00:00').toLocaleDateString('fr-FR');
+  const endStr = new Date(end_date + 'T12:00:00').toLocaleDateString('fr-FR');
 
   const { data: result, error } = await resend.emails.send({
     from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
     to: clientEmail,
-    subject: `💰 Rappel acompte – ${apartment_name}`,
+    subject: `💰 Rappel solde & caution – ${apartment_name}`,
     html: `
-      <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px;">
-        <h2>Bonjour ${clientName},</h2>
-        <p>Votre séjour à <strong>${apartment_name}</strong> approche !</p>
-        <p>Pour rappel, un acompte de <strong>${deposit_amount / 100} €</strong> 
-           (50% du total de ${total_price / 100} €) est à verser.</p>
-        <p>📅 Date d'arrivée : <strong>${dateStr}</strong></p>
-        <br>
-        <p>Cordialement,<br>L'équipe MyBellePlagne</p>
+      <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; line-height: 1.6;">
+        <p>Bonjour ${clientName},</p>
+
+        <p>Je reviens vers vous dans le cadre de votre réservation pour l'appartement <strong>${apartment_name}</strong> du <strong>${startStr}</strong> au <strong>${endStr}</strong>.</p>
+
+        <p>Si vous ne l'avez pas déjà fait, je vous remercie de régler le solde de la location par virement au plus tard 30 jours avant le début du séjour.</p>
+
+        <p>Vous allez recevoir également un mail de Swikly avec un lien sécurisé pour valider la caution (aucun prélèvement ne sera effectué).</p>
+
+        <p>Pour l'organisation de votre arrivée et toutes les questions pratiques concernant votre séjour, vous pouvez contacter le service de conciergerie au <strong>0612575135</strong>.</p>
+
+        <p>Bien cordialement,<br>
+        <strong>Pierre Wejroch</strong></p>
       </div>
     `
   });

@@ -43,6 +43,7 @@ const initScheduledJobs = () => {
               {
                 apartment_name: booking.apartments.name,
                 start_date: booking.start_date,
+                end_date: booking.end_date,
                 total_price: booking.total_price,
                 deposit_amount: booking.total_price / 2,
               }
