@@ -33,6 +33,8 @@ exports.createBooking = async (req, res) => {
     customer_phone, 
     customer_address, 
     customer_dob, 
+    adults_count,   // ✅ Ajoute ça
+    children_count,
     message 
   } = req.body;
 
@@ -115,7 +117,8 @@ exports.createBooking = async (req, res) => {
         end_date: normalizedEndDate,
         total_price: finalPrice,
         has_parking,
-        capacity: apartment.capacity 
+        capacity: apartment.capacity,
+        adults_count: adults_count || 0
     });
 
     // 6. INSERTION EN BDD (avec dates normalisées)

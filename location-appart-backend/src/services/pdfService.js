@@ -117,9 +117,14 @@ doc.moveDown();
 
 // ─── DATES ET PRIX ─────────────────────────────────────
 doc.fontSize(10).font('Helvetica-Bold').text('Dates du séjour et prix :', 50, doc.y);
+
+const taxeSejour = (data.adults_count || 0) * 6;
+
+
 doc.font('Helvetica')
   .text(`Du ${startStr} à 16h au ${endStr} à 10h`, 50, doc.y)
   .text(`Prix : ${totalPrice} €`, 50, doc.y)
+  .text(`Taxe de séjour : ${taxeSejour} €`, 50)
   .text(`Nombre d'occupants maximum : ${capacity}`, 50, doc.y)
   .text(`Dépôt de garantie : ${caution} €`, 50, doc.y);
 
