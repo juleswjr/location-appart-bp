@@ -20,6 +20,7 @@ exports.generateContractPDF = async (data) => {
         apartmentNumber = aptData.number || '';
         buildingName = aptData.building || '';
         capacity = aptData.capacity || capacity;
+        caution = aptData.caution || 0;
       }
     } catch (e) {
       console.error('Erreur récupération infos appart:', e.message);
@@ -63,7 +64,6 @@ exports.generateContractPDF = async (data) => {
     const totalPrice = data.total_price / 100;
     const acompte = (totalPrice / 2).toFixed(2);
     const solde = (totalPrice / 2).toFixed(2);
-    const caution = aptData?.caution || 0;
 
     const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
     const startStr = new Date(data.start_date + 'T12:00:00').toLocaleDateString('fr-FR', dateOptions);
