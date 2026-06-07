@@ -574,7 +574,7 @@ const StarRating = ({ booking, onSave }) => {
                      {/* INFO CONTRAT ENVOYÉ */}
                       {booking.contract_sent_at && (
                         <div className="text-xs text-green-600 mt-1">
-                          📄 Contrat envoyé le {new Date(booking.contract_sent_at + 'T12:00:00').toLocaleDateString('fr-FR')}
+                          📄 Contrat envoyé
                         </div>
                       )}
                     {booking.status === 'confirmed' && (
