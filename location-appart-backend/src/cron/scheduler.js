@@ -5,12 +5,12 @@ const emailService = require('../services/emailService');
 const initScheduledJobs = () => {
   console.log('⏰ Système de planification des emails (Cron) activé.');
 
-  cron.schedule('30 11 * * *', async () => {
+  cron.schedule('* * * * *', async () => {
     console.log("🔄 [CRON] Vérification quotidienne acompte...");
 
     // ✅ FIX DATE : On construit la date en local, pas en UTC
     const in45Days = new Date();
-    in45Days.setDate(in45Days.getDate() + 45);
+    in45Days.setDate(in45Days.getDate() + 217);
     // On force le format YYYY-MM-DD en heure locale (pas UTC)
     const target = `${in45Days.getFullYear()}-${String(in45Days.getMonth() + 1).padStart(2, '0')}-${String(in45Days.getDate()).padStart(2, '0')}`;
 
