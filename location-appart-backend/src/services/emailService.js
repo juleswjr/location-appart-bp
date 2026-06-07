@@ -287,7 +287,7 @@ exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
     const { data: result, error } = await resend.emails.send({
   from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
   to: email,
-  subject: `✅ Réservation Confirmée - ${details.apartment_name}`,
+  subject: `✅ Réservation Prise en compte - ${details.apartment_name}`,
   attachments: [
         {
           filename: `contrat-${name.replace(/\s+/g, '-')}.pdf`,
@@ -298,7 +298,7 @@ exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
     <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; line-height: 1.6;">
       <p>Bonjour ${name},</p>
 
-      <p>Votre demande de réservation du <strong>${details.start_date}</strong> au <strong>${details.end_date}</strong> est prise en compte.</p>
+      <p>Votre demande de réservation pour l'appartement <strong>${details.apartment_name}</strong> du <strong>${details.start_date}</strong> au <strong>${details.end_date}</strong> est prise en compte.</p>
 
       <p>Je vous prie de trouver ci-joint le contrat de location pour l'appartement de Belle Plagne, où nous serons heureux de vous accueillir.</p>
 
