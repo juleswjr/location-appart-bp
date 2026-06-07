@@ -283,20 +283,40 @@ exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
   
   try {
     const { data: result, error } = await resend.emails.send({
-      from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
-      to: email,
-      subject: `✅ Réservation Confirmée - ${details.apartment_name}`,
-      html: `
-        <div style="font-family: Arial, sans-serif; color: #333;">
-          <h2 style="color: #166534;">Félicitations ${name} !</h2>
-          <p>Votre réservation pour <strong>${details.apartment_name}</strong> est confirmée.</p>
-          <p><strong>Dates :</strong> Du ${details.start_date} au ${details.end_date}</p>
-          <p><strong>Prix :</strong> ${details.total_price/100} €</p>
-          <br>
-          <p>À très bientôt !</p>
-        </div>
-      `
-    });
+  from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
+  to: email,
+  subject: `✅ Réservation Confirmée - ${details.apartment_name}`,
+  attachments: [
+        {
+          filename: `contrat-${name.replace(/\s+/g, '-')}.pdf`,
+          content: pdfBuffer,
+        }
+      ],
+  html: `
+    <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; line-height: 1.6;">
+      <p>Bonjour ${name},</p>
+
+      <p>Votre demande de réservation du <strong>${details.start_date}</strong> au <strong>${details.end_date}</strong> est prise en compte.</p>
+
+      <p>Je vous prie de trouver ci-joint le contrat de location pour l'appartement de Belle Plagne, où nous serons heureux de vous accueillir.</p>
+
+      <p>Vous retrouverez en dernière page du contrat les modalités de réservation.</p>
+
+      <p>Pour valider la location, je vous demanderais de me renvoyer le contrat signé et de verser un acompte de 50 % du prix par virement bancaire.<br>
+      Je vous adresse un RIB par SMS pour le virement.</p>
+
+      <p>Par la suite, je vous remercie de régler le solde du séjour au plus tard un mois avant la date de début de la location.</p>
+
+      <p>Il conviendra également de réaliser les formalités pour la caution une semaine avant le début de la location.<br>
+      Vous recevrez un mail avec un lien pour une préautorisation bancaire (aucune somme ne sera débitée sur votre compte).</p>
+
+      <p>Restant à votre disposition pour toute précision complémentaire,</p>
+
+      <p>Bien cordialement,<br>
+      <strong>Pierre Wejroch</strong></p>
+    </div>
+  `
+});
 
     if (error) throw error;
 
