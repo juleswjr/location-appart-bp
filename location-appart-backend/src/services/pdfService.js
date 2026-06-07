@@ -8,6 +8,7 @@ exports.generateContractPDF = async (data) => {
     let apartmentNumber = '';
     let buildingName = '';
     let capacity = data.capacity || '';
+    let caution = 0;
 
     try {
       const { data: aptData, error } = await supabase
@@ -20,7 +21,7 @@ exports.generateContractPDF = async (data) => {
         apartmentNumber = aptData.number || '';
         buildingName = aptData.building || '';
         capacity = aptData.capacity || capacity;
-        caution=aptData.caution||500;
+        caution=aptData.caution||0;
       }
     } catch (e) {
       console.error('Erreur récupération infos appart:', e.message);
