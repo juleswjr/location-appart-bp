@@ -110,12 +110,36 @@ export default function AdminDashboard() {
 };
 const handleStatusChange = async (id, newStatus) => {
   if (!confirm(`Passer cette résa en "${newStatus}" ?`)) return;
-  const { error } = await supabase
-    .from('bookings')
-    .update({ status: newStatus })
-    .eq('id', id);
-  if (error) { alert("Erreur"); return; }
-  setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+  try {
+    if (newStatus === 'confirmed') {
+      // ✅ On passe par la route confirm qui envoie le mail + gère les conflits
+      const res = await fetch(`${apiUrl}/api/bookings/${id}/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        return alert("Erreur : " + (err.message || "Inconnue"));
+      }
+    } else {
+      // Pour rejected et pending : mise à jour directe Supabase
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: newStatus })
+        .eq('id', id);
+      if (error) throw error;
+    }
+
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: newStatus } : b));
+    fetchBookings(); // Refresh pour avoir le prix recalculé si confirmation
+
+  } catch (err) {
+    console.error(err);
+    alert("Erreur lors du changement de statut");
+  }
 };
 // 4. Sauvegarde des emails personnalisés (DIRECT SUPABASE) 🚀
   const saveCustomEmails = async (id, data) => {
@@ -544,18 +568,7 @@ const StarRating = ({ booking, onSave }) => {
                           
                           📄 Contrat
                         </button>
-                        <button 
-                          onClick={() => updateStatus(booking.id, 'confirmed')}
-                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
-                        >
-                          Valider
-                        </button>
-                        <button 
-                          onClick={() => updateStatus(booking.id, 'rejected')}
-                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
-                        >
-                          Refuser
-                        </button>
+                        
                       </>
                     )}
                      {/* INFO CONTRAT ENVOYÉ */}
@@ -645,4 +658,21 @@ const StarRating = ({ booking, onSave }) => {
                     >
                       ✏️ Emails
                     </button>
+
+                        <button 
+                          onClick={() => updateStatus(booking.id, 'confirmed')}
+                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm"
+                        >
+                          Valider
+                        </button>
+                        <button 
+                          onClick={() => updateStatus(booking.id, 'rejected')}
+                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm"
+                        >
+                          Refuser
+                        </button>
+
+
+
+
                     */
