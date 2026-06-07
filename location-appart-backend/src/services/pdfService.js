@@ -33,8 +33,11 @@ exports.generateContractPDF = async (data) => {
     doc.on('end', async () => {
       try {
         const pdfBuffer = Buffer.concat(buffers);
+        console.log('📄 PDF généré, taille:', pdfBuffer.length, 'bytes');
+
         const safeName = data.customer_name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const fileName = `contract_${Date.now()}_${safeName}.pdf`;
+        console.log('📤 Upload vers Supabase:', fileName);
 
         const { error: uploadError } = await supabase
           .storage
@@ -45,6 +48,7 @@ exports.generateContractPDF = async (data) => {
           });
 
         if (uploadError) return reject(uploadError);
+        console.log('✅ Upload OK, génération URL...');
 
         const { data: signedUrlData, error: urlError } = await supabase
           .storage
