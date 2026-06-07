@@ -9,10 +9,10 @@ const initScheduledJobs = () => {
     console.log("🔄 [CRON] Vérification quotidienne acompte...");
 
     // ✅ FIX DATE : On construit la date en local, pas en UTC
-    const in40Days = new Date();
-    in40Days.setDate(in40Days.getDate() + 40);
+    const in45Days = new Date();
+    in45Days.setDate(in45Days.getDate() + 45);
     // On force le format YYYY-MM-DD en heure locale (pas UTC)
-    const target = `${in40Days.getFullYear()}-${String(in40Days.getMonth() + 1).padStart(2, '0')}-${String(in40Days.getDate()).padStart(2, '0')}`;
+    const target = `${in45Days.getFullYear()}-${String(in45Days.getMonth() + 1).padStart(2, '0')}-${String(in45Days.getDate()).padStart(2, '0')}`;
 
     console.log(`📅 Recherche des réservations démarrant le : ${target}`);
 

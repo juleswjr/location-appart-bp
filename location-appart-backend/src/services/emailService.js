@@ -478,7 +478,7 @@ exports.sendDepositReminderEmail = async (clientEmail, clientName, details) => {
 
         <p>Si vous ne l'avez pas déjà fait, je vous remercie de régler le solde de la location par virement au plus tard 30 jours avant le début du séjour.</p>
 
-        <p>Vous allez recevoir également un mail de Swikly avec un lien sécurisé pour valider la caution (aucun prélèvement ne sera effectué).</p>
+        <p>Vous allez recevoir également un mail de <strong>Swikly</strong> avec un lien sécurisé pour valider la caution (aucun prélèvement ne sera effectué).</p>
 
         <p>Pour l'organisation de votre arrivée et toutes les questions pratiques concernant votre séjour, vous pouvez contacter le service de conciergerie au <strong>0612575135</strong>.</p>
 
