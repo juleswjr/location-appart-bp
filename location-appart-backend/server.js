@@ -25,7 +25,6 @@ const allowedOrigins = [
   'https://www.mybelleplagne.fr',     // Ton futur domaine (au cas où)
   'https://location-appart-bp-api.onrender.com'
 ];
-app.options('*', cors());
 app.use(cors({
   origin: function (origin, callback) {
     // Autoriser les requêtes sans origine (comme Postman ou les applis mobiles)
