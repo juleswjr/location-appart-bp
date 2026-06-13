@@ -50,10 +50,11 @@ const initScheduledJobs = () => {
             ),
             emailService.sendDepositReminderEmail(
               process.env.EMAIL_PROPRIO, // ✅ Même mail, envoyé au proprio aussi
-              `Rappel proprio – ${booking.customer_name}`, // Nom affiché dans le mail
+              `Rappel proprio – Nom du locataire : ${booking.customer_name}`, // Nom affiché dans le mail
               {
                 apartment_name: booking.apartments.name,
                 start_date: booking.start_date,
+                end_date: booking.end_date,
                 total_price: booking.total_price,
                 deposit_amount: booking.total_price / 2,
               }
