@@ -70,3 +70,15 @@ html {
   opacity: 1 !important;
 }
 
+.blocked-day {
+  background-color: #f97316 !important;
+  color: white !important;
+  border-radius: 50% !important;
+}
+
+.block-start-day {
+  background-color: #fbbf24 !important;
+  color: white !important;
+  border-radius: 50% !important;
+  animation: pulse 1s infinite;
+}

@@ -294,6 +294,94 @@ const handleRatingUpdate = async (id, rating, note) => {
   'front': new Date(),
 });
 
+const [blockedDates, setBlockedDates] = useState([]);
+const [blockingMode, setBlockingMode] = useState(null); // apartmentId en cours de blocage
+const [blockStart, setBlockStart] = useState(null);
+
+// Charger les blocages
+const fetchBlockedDates = async () => {
+  const { data } = await supabase.from('blocked_dates').select('*');
+  if (data) setBlockedDates(data);
+};
+
+// À ajouter dans fetchBookings ou dans le useEffect
+useEffect(() => {
+  fetchBlockedDates();
+}, []);
+
+// Vérifier si une date est bloquée
+const isBlocked = (date, apartmentId) => {
+  return blockedDates.some(b => {
+    if (b.apartment_id !== apartmentId) return false;
+    const start = new Date(b.start_date + 'T12:00:00');
+    const end = new Date(b.end_date + 'T12:00:00');
+    return date >= start && date <= end;
+  });
+};
+
+// Gérer le clic sur une date du calendrier
+const handleCalendarClick = async (date, apartmentId) => {
+  if (blockingMode !== apartmentId) return; // Pas en mode blocage pour cet appart
+
+  if (!blockStart) {
+    // Premier clic = date de début
+    setBlockStart(date);
+  } else {
+    // Deuxième clic = date de fin → on sauvegarde
+    const start = blockStart < date ? blockStart : date;
+    const end = blockStart < date ? date : blockStart;
+
+    const startStr = `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`;
+    const endStr = `${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`;
+
+    const { error } = await supabase.from('blocked_dates').insert([{
+      apartment_id: apartmentId,
+      start_date: startStr,
+      end_date: endStr,
+      reason: 'Réservation externe'
+    }]);
+
+    if (error) { alert("Erreur lors du blocage"); }
+    else {
+      await fetchBlockedDates();
+      alert(`✅ Dates bloquées du ${startStr} au ${endStr}`);
+    }
+
+    setBlockStart(null);
+    setBlockingMode(null);
+  }
+};
+
+// Supprimer un blocage
+const handleUnblock = async (date, apartmentId) => {
+  const block = blockedDates.find(b => {
+    if (b.apartment_id !== apartmentId) return false;
+    const start = new Date(b.start_date + 'T12:00:00');
+    const end = new Date(b.end_date + 'T12:00:00');
+    return date >= start && date <= end;
+  });
+
+  if (!block) return;
+  if (!confirm("Débloquer ces dates ?")) return;
+
+  await supabase.from('blocked_dates').delete().eq('id', block.id);
+  await fetchBlockedDates();
+};
+
+const getCalendarDayClass = (date, apartmentId) => {
+  if (isBooked(date, apartmentId)) return 'booked-day';
+  if (isBlocked(date, apartmentId)) return 'blocked-day'; // ✅ Nouvelle classe
+  if (blockingMode === apartmentId && blockStart) {
+    // Highlight la date de début sélectionnée
+    const d1 = new Date(date); d1.setHours(12);
+    const d2 = new Date(blockStart); d2.setHours(12);
+    if (d1.toDateString() === d2.toDateString()) return 'block-start-day';
+  }
+  return '';
+};
+
+
+
 const APARTMENTS = [
   { key: 'marmotte', name: 'Marmotte',       id: '3cdc88a6-86ae-40f6-b144-5c7198187be0' },
   { key: 'chamois',  name: 'Chamois',         id: '584d3c17-ea04-4513-a7e4-0979b7ce5771' },
@@ -306,10 +394,9 @@ const isBooked = (date, apartmentId) => {
   return bookings.some(b => {
     if (b.apartment_id !== apartmentId) return false;
     if (b.status !== 'confirmed') return false;
-    // ✅ Fix UTC : on force midi pour éviter le décalage
     const start = new Date(b.start_date + 'T12:00:00');
-    const end   = new Date(b.end_date + 'T12:00:00');
-    return date >= start && date < end;
+    const end = new Date(b.end_date + 'T12:00:00');
+    return date >= start && date < end; // ✅ >= start (inclus) et < end (exclu)
   });
 };
 
@@ -617,29 +704,68 @@ const StarRating = ({ booking, onSave }) => {
         <div className="grid grid-cols-2 gap-6">
           {APARTMENTS.map((apt) => (
             <div key={apt.key} className="bg-white rounded-lg shadow p-4">
-              <h3 className="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2">
-               {apt.name}
-              </h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-lg font-bold text-gray-700">🏠 {apt.name}</h3>
+                <button
+                  onClick={() => {
+                    if (blockingMode === apt.id) {
+                      setBlockingMode(null);
+                      setBlockStart(null);
+                    } else {
+                      setBlockingMode(apt.id);
+                      setBlockStart(null);
+                    }
+                  }}
+                  className={`text-xs px-3 py-1 rounded font-medium transition-all ${
+                    blockingMode === apt.id
+                      ? 'bg-orange-500 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-orange-100'
+                  }`}
+                >
+                  {blockingMode === apt.id
+                    ? blockStart ? '📅 Cliquez sur la date de fin' : '📅 Cliquez sur la date de début'
+                    : '🔒 Bloquer des dates'}
+                </button>
+              </div>
+
               <DatePicker
                 inline
                 locale={fr}
                 dayClassName={(date) => getCalendarDayClass(date, apt.id)}
-                filterDate={() => true} // Toutes les dates visibles
+                filterDate={() => true}
                 onMonthChange={(date) =>
                   setCalendarMonth(prev => ({ ...prev, [apt.key]: date }))
                 }
-                selected={calendarMonth[apt.key]}
-                onChange={() => {}} // Lecture seule, pas de sélection
+                selected={blockStart || calendarMonth[apt.key]}
+                onChange={(date) => {
+                  if (blockingMode === apt.id) {
+                    handleCalendarClick(date, apt.id);
+                  } else if (isBlocked(date, apt.id)) {
+                    handleUnblock(date, apt.id);
+                  }
+                }}
               />
+
               {/* Légende */}
-              <div className="flex items-center gap-3 mt-3 text-xs text-gray-500">
+              <div className="flex items-center gap-3 mt-3 text-xs text-gray-500 flex-wrap">
                 <span className="flex items-center gap-1">
                   <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Réservé
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-full bg-orange-400 inline-block"></span> Bloqué (externe)
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-3 h-3 rounded-full bg-gray-200 inline-block"></span> Disponible
                 </span>
               </div>
+
+              {blockingMode === apt.id && (
+                <p className="text-xs text-orange-500 mt-2 font-medium animate-pulse">
+                  {blockStart
+                    ? `Date de début : ${blockStart.toLocaleDateString('fr-FR')} — cliquez sur la date de fin`
+                    : 'Cliquez sur la date de début du blocage'}
+                </p>
+              )}
             </div>
           ))}
         </div>
