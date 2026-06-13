@@ -400,10 +400,7 @@ const isBooked = (date, apartmentId) => {
   });
 };
 
-const getCalendarDayClass = (date, apartmentId) => {
-  if (isBooked(date, apartmentId)) return 'booked-day';
-  return '';
-};
+
 
 const StarRating = ({ booking, onSave }) => {
   const [rating, setRating] = useState(booking.owner_rating || 0);
