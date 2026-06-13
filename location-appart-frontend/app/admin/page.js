@@ -392,7 +392,10 @@ const isBooked = (date, apartmentId) => {
     return d >= start && d < end;
   });
 };
-
+const handleViewContract = (contractUrl) => {
+  if (!contractUrl) return alert("Aucun contrat généré pour cette réservation.");
+  window.open(contractUrl, '_blank');
+};
 
 
 const StarRating = ({ booking, onSave }) => {
@@ -639,10 +642,17 @@ const StarRating = ({ booking, onSave }) => {
                       <>
 
                         
-                        <button onClick={() => handleSendContract(booking.id)}
+                        <button
+                          onClick={() => handleViewContract(booking.contract_url)}
+                          className="bg-gray-100 text-gray-600 px-2 py-1 rounded hover:bg-gray-200 text-sm"
+                          title="Voir le contrat"
+                        >
+                          👁
+                        </button>
+                        <button
+                          onClick={() => handleSendContract(booking.id)}
                           className="bg-gray-200 text-gray-800 px-3 py-1 rounded hover:bg-gray-300 text-sm"
-                          >
-                          
+                        >
                           📄 Contrat
                         </button>
                         
@@ -656,9 +666,17 @@ const StarRating = ({ booking, onSave }) => {
                       )}
                     {booking.status === 'confirmed' && (
                        <span className="text-gray-400 text-sm italic">Réservation validée ✅
-                       <button onClick={() => handleSendContract(booking.id)}
+                       <button
+                          onClick={() => handleViewContract(booking.contract_url)}
+                          className="bg-gray-100 text-gray-600 px-2 py-1 rounded hover:bg-gray-200 text-sm"
+                          title="Voir le contrat"
+                        >
+                          👁
+                        </button>
+                        <button
+                          onClick={() => handleSendContract(booking.id)}
                           className="bg-gray-200 text-gray-800 px-3 py-1 rounded hover:bg-gray-300 text-sm"
-                          >
+                        >
                           📄 Contrat
                         </button>
                        
