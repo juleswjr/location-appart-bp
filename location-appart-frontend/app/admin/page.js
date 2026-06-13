@@ -298,16 +298,10 @@ const [blockedDates, setBlockedDates] = useState([]);
 const [blockingMode, setBlockingMode] = useState(null); // apartmentId en cours de blocage
 const [blockStart, setBlockStart] = useState(null);
 
-// Charger les blocages
-const fetchBlockedDates = async () => {
-  const { data } = await supabase.from('blocked_dates').select('*');
-  if (data) setBlockedDates(data);
-};
 
-// À ajouter dans fetchBookings ou dans le useEffect
-useEffect(() => {
-  fetchBlockedDates();
-}, []);
+
+
+
 
 // Vérifier si une date est bloquée
 const isBlocked = (date, apartmentId) => {
@@ -321,29 +315,39 @@ const isBlocked = (date, apartmentId) => {
 
 // Gérer le clic sur une date du calendrier
 const handleCalendarClick = async (date, apartmentId) => {
-  if (blockingMode !== apartmentId) return; // Pas en mode blocage pour cet appart
+  if (blockingMode !== apartmentId) return;
 
   if (!blockStart) {
-    // Premier clic = date de début
     setBlockStart(date);
   } else {
-    // Deuxième clic = date de fin → on sauvegarde
     const start = blockStart < date ? blockStart : date;
     const end = blockStart < date ? date : blockStart;
 
     const startStr = `${start.getFullYear()}-${String(start.getMonth()+1).padStart(2,'0')}-${String(start.getDate()).padStart(2,'0')}`;
     const endStr = `${end.getFullYear()}-${String(end.getMonth()+1).padStart(2,'0')}-${String(end.getDate()).padStart(2,'0')}`;
 
-    const { error } = await supabase.from('blocked_dates').insert([{
-      apartment_id: apartmentId,
-      start_date: startStr,
-      end_date: endStr,
-      reason: 'Réservation externe'
-    }]);
+    if (!confirm(`Bloquer du ${startStr} au ${endStr} ?`)) {
+      setBlockStart(null);
+      setBlockingMode(null);
+      return;
+    }
+
+    // ✅ Crée une vraie réservation confirmée
+    const { error } = await supabase
+      .from('bookings')
+      .insert([{
+        apartment_id: apartmentId,
+        start_date: startStr,
+        end_date: endStr,
+        status: 'confirmed',
+        customer_name: 'Bloqué',
+        customer_email: 'blocked@internal.fr',
+        total_price: 0,
+      }]);
 
     if (error) { alert("Erreur lors du blocage"); }
     else {
-      await fetchBlockedDates();
+      await fetchBookings(); 
       alert(`✅ Dates bloquées du ${startStr} au ${endStr}`);
     }
 
@@ -352,21 +356,7 @@ const handleCalendarClick = async (date, apartmentId) => {
   }
 };
 
-// Supprimer un blocage
-const handleUnblock = async (date, apartmentId) => {
-  const block = blockedDates.find(b => {
-    if (b.apartment_id !== apartmentId) return false;
-    const start = new Date(b.start_date + 'T12:00:00');
-    const end = new Date(b.end_date + 'T12:00:00');
-    return date >= start && date <= end;
-  });
 
-  if (!block) return;
-  if (!confirm("Débloquer ces dates ?")) return;
-
-  await supabase.from('blocked_dates').delete().eq('id', block.id);
-  await fetchBlockedDates();
-};
 
 const getCalendarDayClass = (date, apartmentId) => {
   if (isBooked(date, apartmentId)) return 'booked-day';
@@ -396,7 +386,10 @@ const isBooked = (date, apartmentId) => {
     if (b.status !== 'confirmed') return false;
     const start = new Date(b.start_date + 'T12:00:00');
     const end = new Date(b.end_date + 'T12:00:00');
-    return date >= start && date < end; // ✅ >= start (inclus) et < end (exclu)
+    // ✅ On normalise aussi la date du calendrier à midi
+    const d = new Date(date);
+    d.setHours(12, 0, 0, 0);
+    return d >= start && d < end;
   });
 };
 
