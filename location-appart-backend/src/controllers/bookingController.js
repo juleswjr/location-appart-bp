@@ -137,7 +137,9 @@ exports.createBooking = async (req, res) => {
           customer_address, 
            
           message,
-          contract_url: pdfPath
+          contract_url: pdfPath,
+          adults_count: adults_count || 0,   // ✅ Ajoute ça
+          children_count: children_count || 0 // ✅ Et ça
         }])
       .select()
       .single();
@@ -250,6 +252,7 @@ exports.confirmBooking = async (req, res) => {
 
     // 3. Générer le PDF avec le prix officiel
     const pdfUrl = await generateContractPDF({
+       apartment_id: booking.apartment_id,
       customer_name: booking.customer_name,
       customer_email: booking.customer_email,
       customer_phone: booking.customer_phone,
@@ -258,7 +261,7 @@ exports.confirmBooking = async (req, res) => {
       start_date: booking.start_date,
       end_date: booking.end_date,
       total_price: officialPrice, // ✅ Prix recalculé
-      has_parking: booking.has_parking
+      adults_count: booking.adults_count || 0
     });
 
     // 4. Envoyer l'email de confirmation avec le bon prix
