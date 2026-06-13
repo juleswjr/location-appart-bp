@@ -530,7 +530,7 @@ const StarRating = ({ booking, onSave }) => {
                         className="w-4 h-4 accent-green-500"
                       />
                       <span className="text-xs text-gray-500">
-                        {booking.caution_paid ? '✅ Payée' : '⏳ En attente'}
+                        {booking.caution_paid ? '✅ Acceptée' : '⏳ En attente'}
                       </span>
                     </label>
                   </td>

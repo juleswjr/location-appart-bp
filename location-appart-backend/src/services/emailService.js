@@ -350,10 +350,10 @@ exports.sendContractToClient = async (clientEmail, clientName, details, contract
 
           <p>Par la suite, je vous remercie de régler le solde du séjour au plus tard un mois avant la date de début de la location.</p>
 
-          <p>Il conviendra également de réaliser les formalités pour la caution une semaine avant le début de la location.<br>
-          Vous recevrez un mail avec un lien pour une préautorisation bancaire (aucune somme ne sera débitée sur votre compte).</p>
+          <p>Il conviendra également de réaliser les formalités pour la caution, au plus tard un mois avant le début de la location.<br>
+          Vous recevrez 45 jours avant le début de votre séjour un mail avec un lien pour accomplir cette formalité (aucune somme ne sera débitée sur votre compte).</p>
 
-          <p>Restant à votre disposition pour toute précision complémentaire,</p>
+          <p>En restant à votre disposition pour toute précision complémentaire,</p>
 
           <p>Bien cordialement,<br>
           <strong>Pierre Wejroch</strong></p>

@@ -176,7 +176,7 @@ doc.moveDown();
     addSection('Art. 9 Arrivée et départ');
     addParagraph(`Le lieu de remise des clés vous sera transmis après la réception du solde du loyer. Le locataire s'engage à laisser l'appartement dans l'état de propreté et de rangement dans lequel il l'a trouvé. Le locataire informera le loueur si les lieux ne sont pas propre à son arrivée.`);
     addSection('Formalités avec la conciergerie');
-    addParagraph(`Merci de contacter le serve de conciergerie avant votre arrivée pour préciser les modalités de remise des clés et état des lieux. Il en sera de même pour fixer la fin du séjour.`);
+    addParagraph(`Merci de contacter la conciergerie avant votre arrivée pour préciser les modalités de remise des clés et état des lieux. Il en sera de même pour fixer la fin du séjour.`);
 
     // ─── MODALITÉS DE RÉSERVATION ──────────────────────────
     doc.addPage();
