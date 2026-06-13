@@ -506,7 +506,6 @@ const StarRating = ({ booking, onSave }) => {
           <table className="w-full text-left border-collapse min-w-[900px]">
             <thead className="bg-gray-100">
               <tr>
-                // Dans le thead, remplace tous les "p-4" par :
                 <th className="p-2 md:p-4 border-b text-xs md:text-sm">Statut</th>
                 <th className="p-2 md:p-4 border-b text-xs md:text-sm">Appartement</th>
                 <th className="p-2 md:p-4 border-b text-xs md:text-sm">Client</th>
