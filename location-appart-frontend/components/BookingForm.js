@@ -31,10 +31,11 @@ export default function BookingForm({ apartment }) {
   const [isCalculating, setIsCalculating] = useState(false);
 
   const [formData, setFormData] = useState({
-    customer_name: "", customer_email: "", customer_phone: "",
-    customer_address: "", customer_dob: "", message: "",
-    adults_count: "", children_count: ""
-  });
+  customer_name: "", customer_email: "", customer_phone: "",
+  street: "", postal_code: "", city: "", country: "",
+  customer_dob: "", message: "",
+  adults_count: "", children_count: ""
+});
 
   const [fullyBookedDates, setFullyBookedDates] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -186,6 +187,12 @@ export default function BookingForm({ apartment }) {
       // Formatage simple pour éviter le timezone
       const formattedStartDate = format(startDate, 'yyyy-MM-dd');
       const formattedEndDate = format(endDate, 'yyyy-MM-dd');
+      const fullAddress = [
+        formData.street,
+        formData.postal_code,
+        formData.city,
+        formData.country
+      ].filter(Boolean).join(', ');
 
       const res = await fetch(`${apiUrl}/api/bookings`, {
         method: "POST",
@@ -196,8 +203,8 @@ export default function BookingForm({ apartment }) {
           end_date: formattedEndDate,
           status: "pending",
           has_parking: hasParking,
-          total_price: totalPrice * 100, // On renvoie des centimes au backend
-          ...formData
+         ...formData,
+         customer_address: fullAddress
         }),
       });
 
@@ -206,7 +213,10 @@ export default function BookingForm({ apartment }) {
 
       setStatus("success");
       setStartDate(null); setEndDate(null); setHasParking(false); setTotalPrice(0);
-      setFormData({ customer_name: "", customer_email: "", customer_phone: "", customer_address: "", customer_dob: "", message: "" });
+      setFormData({   customer_name: "", customer_email: "", customer_phone: "", 
+  street: "", postal_code: "", city: "", country: "",
+  customer_dob: "", message: "",
+  adults_count: "", children_count: ""});
 
     } catch (error) { alert("Erreur : " + error.message); } finally { setLoading(false); }
   };
@@ -313,8 +323,16 @@ export default function BookingForm({ apartment }) {
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label><input type="tel" name="customer_phone" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_phone} /></div>
           <div><label className="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" name="customer_email" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_email} /></div>
 
-        <div><label className="block text-sm font-medium text-gray-700 mb-1">Adresse postale</label><input type="text" name="customer_address" required className="w-full border p-2 rounded" onChange={handleChange} value={formData.customer_address} /></div>
-        <div><label className="block text-sm font-medium text-gray-700 mb-1">Message</label><textarea name="message" rows="3" className="w-full border p-2 rounded" onChange={handleChange} value={formData.message}></textarea></div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Adresse postale</label>
+        <input type="text" name="street" required placeholder="15 rue de la Paix" className="w-full border p-2 rounded mb-2" onChange={handleChange} value={formData.street || ''} />
+        <div className="grid grid-cols-2 gap-2">
+          <input type="text" name="postal_code" placeholder="Code postal" className="w-full border p-2 rounded" onChange={handleChange} value={formData.postal_code || ''} />
+          <input type="text" name="city" placeholder="Ville" className="w-full border p-2 rounded" onChange={handleChange} value={formData.city || ''} />
+        </div>
+        <input type="text" name="country" placeholder="Pays (optionnel)" className="w-full border p-2 rounded mt-2" onChange={handleChange} value={formData.country || ''} />
+      </div>        
+      <div><label className="block text-sm font-medium text-gray-700 mb-1">Message</label><textarea name="message" rows="3" className="w-full border p-2 rounded" onChange={handleChange} value={formData.message}></textarea></div>
       </div>
 
       
