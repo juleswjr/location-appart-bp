@@ -325,7 +325,9 @@ exports.sendContractToClient = async (clientEmail, clientName, details, contract
     const pdfResponse = await fetch(contractUrl);
     const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
 
-    const { data: result, error } = await resend.emails.send({
+   
+    await Promise.all([
+    resend.emails.send({
       from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
       to: clientEmail,
       subject: `📄 Location prise en compte – ${details.apartment_name}`,
@@ -345,7 +347,7 @@ exports.sendContractToClient = async (clientEmail, clientName, details, contract
 
           <p>Vous retrouverez en dernière page du contrat les modalités de réservation.</p>
 
-          <p>Pour valider la location, je vous demanderais de me renvoyer le contrat signé et de verser un acompte de 50 % du prix par virement bancaire.<br>
+          <p>Pour valider la location, je vous demanderais de me renvoyer le contrat signé et de verser un acompte de 50 % du prix par virement bancaire dans les 3 jours.<br>
           Je vous adresse un RIB par SMS pour le virement.</p>
 
           <p>Par la suite, je vous remercie de régler le solde du séjour au plus tard un mois avant la date de début de la location.</p>
@@ -359,12 +361,26 @@ exports.sendContractToClient = async (clientEmail, clientName, details, contract
           <strong>Pierre Wejroch</strong></p>
         </div>
       `
-    });
-
-    if (error) throw error;
-    console.log("✅ Contrat envoyé au client via Resend");
+      }),
+      resend.emails.send({
+        from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
+        to: process.env.EMAIL_PROPRIO,
+        subject: `📄 Contrat envoyé – ${details.apartment_name} – ${clientName}`,
+        attachments: [{ filename: `contrat-${clientName.replace(/\s+/g, '-')}.pdf`, content: pdfBuffer }],
+        html: `
+          <div style="font-family: Arial, sans-serif; color: #333;">
+            <p>Le contrat a été envoyé au client <strong>${clientName}</strong> pour la réservation suivante :</p>
+            <ul>
+              <li><strong>Appartement :</strong> ${details.apartment_name}</li>
+              <li><strong>Du :</strong> ${details.start_date}</li>
+              <li><strong>Au :</strong> ${details.end_date}</li>
+            </ul>
+          </div>
+        `
+      })
+    ]);
+    console.log("✅ Contrat envoyé au client ET au proprio");
     console.log("========================================\n");
-    return result;
 
   } catch (err) {
     console.error("❌ Erreur:", err.message);

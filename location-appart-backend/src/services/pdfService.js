@@ -70,6 +70,15 @@ exports.generateContractPDF = async (data) => {
     const acompte = Math.round(totalPrice / 2);
     const solde = Math.round(totalPrice / 2);
     //const caution = (totalPrice / 2).toFixed(2);
+    // ─── PROPRIO SELON L'APPARTEMENT ───────────────────────────────
+    const proprios = {
+      nom: ['M. Pierre WEJROCH', 'Mme Virginie LIOTARD'],
+      adresse: ['Chemin du Bois de Laud', '2 Rue Cujas'], // Ajoute l'adresse de Virginie si besoin
+      ville: ['26200 MONTELIMAR', '26000 Valence']
+    };
+
+    const proprioIndex = apartmentNumber === 431 ? 1 : 0;
+
 
     const dateOptions = { day: '2-digit', month: '2-digit', year: 'numeric' };
     const startStr = new Date(data.start_date + 'T12:00:00').toLocaleDateString('fr-FR', dateOptions);
@@ -94,9 +103,9 @@ doc.moveDown(1.5);
 // Loueur
 doc.fontSize(10).font('Helvetica-Bold').text('Le Loueur :', 50);
 doc.font('Helvetica')
-  .text('M. Pierre WEJROCH', 50)
-  .text('Chemin du Bois de Maud', 50)
-  .text('26200 MONTELIMAR', 50);
+  .text(proprios.nom[proprioIndex], 50)
+  .text(proprios.adresse[proprioIndex], 50)
+  .text(proprios.ville[proprioIndex], 50);
 
 doc.moveDown();
 
