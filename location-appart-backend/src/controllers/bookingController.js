@@ -442,37 +442,26 @@ exports.sendContractToOwner = async (req, res) => {
     if (!booking.contract_url) {
       return res.status(400).json({ message: "Aucun contrat généré pour cette réservation." });
     }
-    // ✅ Envoi en parallèle au proprio ET au client
 
-        await Promise.all([
-      emailService.sendContractToOwner(
-        booking.customer_email,
-        booking.customer_name,
-        {
-          apartment_name: booking.apartments.name,
-          start_date: booking.start_date,
-          end_date: booking.end_date,
-        },
-        booking.contract_url
-      ),
-      emailService.sendContractToClient(
-        booking.customer_email,
-        booking.customer_name,
-        {
-          apartment_name: booking.apartments.name,
-          start_date: booking.start_date,
-          end_date: booking.end_date,
-        },
-        booking.contract_url
-      )
-    ]);
-await supabase
-  .from('bookings')
-  .update({ contract_sent_at: new Date().toISOString() })
-  .eq('id', id);
-    console.log(`✅ Contrat envoyé au propriétaire pour la réservation ${id}`);
+    await emailService.sendContractToClient(
+      booking.customer_email,
+      booking.customer_name,
+      {
+        apartment_name: booking.apartments.name,
+        start_date: booking.start_date,
+        end_date: booking.end_date,
+      },
+      booking.contract_url
+    );
+  
+    
+  await supabase
+    .from('bookings')
+    .update({ contract_sent_at: new Date().toISOString() })
+    .eq('id', id);
+      console.log(`✅ Contrat envoyé au propriétaire pour la réservation ${id}`);
 
-    res.status(200).json({ message: "Contrat envoyé au propriétaire avec succès !" });
+      res.status(200).json({ message: "Contrat envoyé au propriétaire avec succès !" });
   
   } catch (error) {
     console.error("❌ Erreur envoi contrat propriétaire :", error);
