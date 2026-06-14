@@ -325,9 +325,7 @@ exports.sendContractToClient = async (clientEmail, clientName, details, contract
     const pdfResponse = await fetch(contractUrl);
     const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
 
-   
-    await Promise.all([
-    resend.emails.send({
+    const { data: result, error } = await resend.emails.send({
       from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
       to: clientEmail,
       subject: `📄 Location prise en compte – ${details.apartment_name}`,
@@ -347,40 +345,29 @@ exports.sendContractToClient = async (clientEmail, clientName, details, contract
 
           <p>Vous retrouverez en dernière page du contrat les modalités de réservation.</p>
 
-          <p>Pour valider la location, je vous demanderais de me renvoyer le contrat signé et de verser un acompte de 50 % du prix par virement bancaire dans les 3 jours.<br>
+          <p>Pour valider la location, je vous demanderais de me renvoyer le contrat signé et de verser un acompte de 50 % du prix par virement bancaire.<br>
           Je vous adresse un RIB par SMS pour le virement.</p>
 
           <p>Par la suite, je vous remercie de régler le solde du séjour au plus tard un mois avant la date de début de la location.</p>
 
+          <p>Il conviendra également de réaliser les formalités pour la caution une semaine avant le début de la location.<br>
+          Vous recevrez un mail avec un lien pour une préautorisation bancaire (aucune somme ne sera débitée sur votre compte).</p>
           <p>Il conviendra également de réaliser les formalités pour la caution, au plus tard un mois avant le début de la location.<br>
           Vous recevrez 45 jours avant le début de votre séjour un mail avec un lien pour accomplir cette formalité (aucune somme ne sera débitée sur votre compte).</p>
 
+          <p>Restant à votre disposition pour toute précision complémentaire,</p>
           <p>En restant à votre disposition pour toute précision complémentaire,</p>
 
           <p>Bien cordialement,<br>
           <strong>Pierre Wejroch</strong></p>
         </div>
       `
-      }),
-      resend.emails.send({
-        from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
-        to: process.env.EMAIL_PROPRIO,
-        subject: `📄 Contrat envoyé – ${details.apartment_name} – ${clientName}`,
-        attachments: [{ filename: `contrat-${clientName.replace(/\s+/g, '-')}.pdf`, content: pdfBuffer }],
-        html: `
-          <div style="font-family: Arial, sans-serif; color: #333;">
-            <p>Le contrat a été envoyé au client <strong>${clientName}</strong> pour la réservation suivante :</p>
-            <ul>
-              <li><strong>Appartement :</strong> ${details.apartment_name}</li>
-              <li><strong>Du :</strong> ${details.start_date}</li>
-              <li><strong>Au :</strong> ${details.end_date}</li>
-            </ul>
-          </div>
-        `
-      })
-    ]);
-    console.log("✅ Contrat envoyé au client ET au proprio");
+    });
+
+    if (error) throw error;
+    console.log("✅ Contrat envoyé au client via Resend");
     console.log("========================================\n");
+    return result;
 
   } catch (err) {
     console.error("❌ Erreur:", err.message);
@@ -571,8 +558,7 @@ exports.sendParkingEmail = async (clientEmail, apartmentName, messageHtml) => {
 };
 
 */
-exports.sendContractToOwner = async (bookingInfo, contractUrl) => {
-  const { apartment_name, customer_name, start_date, end_date, total_price, has_parking } = bookingInfo;
+exports.sendContractToOwner = async (clientEmail, clientName, details, contractUrl) => {
 
   console.log("\n📧 ========== CONTRAT PROPRIO ==========");
 
@@ -581,30 +567,21 @@ exports.sendContractToOwner = async (bookingInfo, contractUrl) => {
   const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
 
   const { data: result, error } = await resend.emails.send({
-    from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
-    to: process.env.EMAIL_PROPRIO,
-    subject: `📄 Contrat – ${apartment_name} – ${customer_name}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #333;">
-        <h2>Contrat de location à signer</h2>
-        <p>Voici le contrat pour la réservation suivante :</p>
-        <ul>
-          <li><strong>Appartement :</strong> ${apartment_name}</li>
-          <li><strong>Client :</strong> ${customer_name}</li>
-          <li><strong>Du :</strong> ${start_date}</li>
-          <li><strong>Au :</strong> ${end_date}</li>
-          <li><strong>Prix total :</strong> ${total_price / 100} €</li>
-          
-        </ul>
-      </div>
-    `,
-    attachments: [
-      {
-        filename: `contrat-${customer_name.replace(/\s+/g, '-')}.pdf`,
-        content: pdfBuffer,
-      }
-    ]
-  });
+        from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
+        to: process.env.EMAIL_PROPRIO,
+        subject: `📄 Contrat envoyé – ${details.apartment_name} – ${clientName}`,
+        attachments: [{ filename: `contrat-${clientName.replace(/\s+/g, '-')}.pdf`, content: pdfBuffer }],
+        html: `
+          <div style="font-family: Arial, sans-serif; color: #333;">
+            <p>Le contrat a été envoyé au client <strong>${clientName}</strong> pour la réservation suivante :</p>
+            <ul>
+              <li><strong>Appartement :</strong> ${details.apartment_name}</li>
+              <li><strong>Du :</strong> ${details.start_date}</li>
+              <li><strong>Au :</strong> ${details.end_date}</li>
+            </ul>
+          </div>
+        `
+      });
 
   if (error) {
     console.error("❌ Erreur Resend contrat proprio:", error);

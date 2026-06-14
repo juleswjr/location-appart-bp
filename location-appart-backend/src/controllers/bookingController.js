@@ -446,13 +446,12 @@ exports.sendContractToOwner = async (req, res) => {
 
         await Promise.all([
       emailService.sendContractToOwner(
+        booking.customer_email,
+        booking.customer_name,
         {
           apartment_name: booking.apartments.name,
-          customer_name: booking.customer_name,
           start_date: booking.start_date,
           end_date: booking.end_date,
-          total_price: booking.total_price,
-          has_parking: booking.has_parking
         },
         booking.contract_url
       ),
