@@ -353,7 +353,7 @@ exports.sendContractToClient = async (clientEmail, clientName, details, contract
 
          <p>Il conviendra également de réaliser les formalités pour la caution, au plus tard un mois avant le début de la location.<br>
           Vous recevrez 45 jours avant le début de votre séjour un mail avec un lien pour accomplir cette formalité (aucune somme ne sera débitée sur votre compte).</p>
-          <p>En restant à votre disposition pour toute précision complémentaire,</p>
+          <p>En restant à votre disposition pour toute précision complémentaire (mybelleplagne@gmail.com),</p>
 
           <p>Bien cordialement,<br>
           <strong>Pierre Wejroch</strong></p>
