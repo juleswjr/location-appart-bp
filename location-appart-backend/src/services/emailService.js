@@ -346,7 +346,7 @@ exports.sendContractToClient = async (clientEmail, clientName, details, contract
 
           <p>Vous retrouverez en dernière page du contrat les modalités de réservation.</p>
 
-          <p>Pour valider la location, je vous demanderais de me renvoyer le contrat signé et de verser un acompte de 50 % du prix par virement bancaire.<br>
+          <p>Pour valider la location, je vous demanderais de me renvoyer le contrat signé à l'adresse mail suivante : mybelleplagne@gmail.com et de verser un acompte de 50 % du prix par virement bancaire.<br>
           Je vous adresse un RIB par SMS pour le virement.</p>
 
           <p>Par la suite, je vous remercie de régler le solde du séjour au plus tard un mois avant la date de début de la location.</p>
