@@ -224,7 +224,7 @@ const handleStatusChange = async (id, newStatus) => {
   };
 
   const handleSendContract = async (id) => {
-  if (!confirm("Envoyer le contrat au propriétaire ?")) return;
+  if (!confirm("Envoyer le contrat au locataire ?")) return;
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
@@ -235,7 +235,7 @@ const handleStatusChange = async (id, newStatus) => {
     });
 
     if (res.ok) {
-      alert("✅ Contrat envoyé au propriétaire !");
+      alert("✅ Contrat envoyé !");
     } else {
       const err = await res.json();
       alert("Erreur : " + (err.message || "Inconnue"));
