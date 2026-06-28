@@ -462,7 +462,7 @@ exports.sendBookingRejectedEmail = async (clientEmail, clientName, apartmentName
 };
 
 exports.sendDepositReminderEmail = async (clientEmail, clientName, details) => {
-  const { apartment_name, start_date, end_date, total_price, adults_cout } = details;
+  const { apartment_name, start_date, end_date, total_price, adults_count } = details;
 
   const startStr = new Date(start_date + 'T12:00:00').toLocaleDateString('fr-FR');
   const endStr = new Date(end_date + 'T12:00:00').toLocaleDateString('fr-FR');
