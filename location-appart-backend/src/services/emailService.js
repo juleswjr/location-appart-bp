@@ -340,8 +340,8 @@ exports.sendContractToClient = async (clientEmail, clientName, details, contract
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; line-height: 1.6;">
           <p>Bonjour ${clientName},</p>
 
-          <p>Votre demande de réservation pour l'appartement <strong>${details.apartment_name}</strong> du <strong>${details.start_date}</strong> au <strong>${details.end_date}</strong> est prise en compte.</p>
-
+          <p>Votre demande de réservation pour l'appartement <strong>${details.apartment_name}</strong> du <strong>${details.start_date}</strong> au <strong>${details.end_date}</strong> a bien été prise en compte.</p>
+          <p>L'appartement est désormais bloqué à votre nom. Nous vous remercions de bien vouloir effectuer les formalités de réservation dans un délai de 5 jours afin de confirmer votre séjour.</p>
           <p>Je vous prie de trouver ci-joint le contrat de location pour l'appartement de Belle Plagne, où nous serons heureux de vous accueillir.</p>
 
           <p>Vous retrouverez en dernière page du contrat les modalités de réservation.</p>

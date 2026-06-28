@@ -459,12 +459,12 @@ exports.sendContractToOwner = async (req, res) => {
     .from('bookings')
     .update({ contract_sent_at: new Date().toISOString() })
     .eq('id', id);
-      console.log(`✅ Contrat envoyé au propriétaire pour la réservation ${id}`);
+      console.log(`✅ Contrat envoyé pour la réservation ${id}`);
 
-      res.status(200).json({ message: "Contrat envoyé au propriétaire avec succès !" });
+      res.status(200).json({ message: "Contrat envoyé au client avec succès !" });
   
   } catch (error) {
-    console.error("❌ Erreur envoi contrat propriétaire :", error);
+    console.error("❌ Erreur envoi contrat :", error);
     res.status(500).json({ message: "Erreur serveur.", error: error.message });
   }
 };
