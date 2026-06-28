@@ -46,19 +46,19 @@ exports.downloadAccountingExcel = async (req, res) => {
 
     // 5. Ajouter les lignes
     bookings.forEach(booking => {
-      worksheet.addRow({
-        appart: booking.apartments?.name || "Inconnu",
-        client: booking.customer_name,
-        tel: booking.customer_phone || '',
-        mail: booking.customer_email || '',
-        start: new Date(booking.start_date).toLocaleDateString(),
-        end: new Date(booking.end_date).toLocaleDateString(),
-        price: booking.amount_paid,
-        note: booking.owner_rating 
-          ? `${booking.owner_rating}/5${booking.owner_note ? ' – ' + booking.owner_note : ''}`
-          : ''
-      });
+    worksheet.addRow({
+      appart: booking.apartments?.name || "Inconnu",
+      client: booking.customer_name,
+      tel: booking.customer_phone || '',
+      mail: booking.customer_email || '',
+      start: new Date(booking.start_date).toLocaleDateString(),
+      end: new Date(booking.end_date).toLocaleDateString(),
+      price: booking.amount_paid,
+      note: booking.owner_rating 
+        ? `${booking.owner_rating}/5${booking.owner_note ? ' – ' + booking.owner_note : ''}`
+        : ''
     });
+  });
 
     // 6. Envoyer le fichier au navigateur
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
