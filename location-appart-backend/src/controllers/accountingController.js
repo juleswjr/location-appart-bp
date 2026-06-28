@@ -13,17 +13,11 @@ exports.downloadAccountingExcel = async (req, res) => {
 
     if (error) throw error;
 
-    // 2. Filtrer uniquement ceux qui sont TOTALEMENT payés
-    // (Rappel : les prix sont en centimes dans la BDD)
-    const paidBookings = bookings.filter(b => {
-        const paye = parseFloat(b.amount_paid || 0);
-        const total = parseFloat(b.total_price/100 || 0);
-        return paye >= total;
-    });
+    
 
 
     // 3. Trier par Nom d'appartement (Javascript sort)
-    paidBookings.sort((a, b) => {
+    bookings.sort((a, b) => {
       const nameA = a.apartments?.name || "";
       const nameB = b.apartments?.name || "";
       return nameA.localeCompare(nameB);
@@ -51,7 +45,7 @@ exports.downloadAccountingExcel = async (req, res) => {
     worksheet.getRow(1).font = { bold: true };
 
     // 5. Ajouter les lignes
-    paidBookings.forEach(booking => {
+    bookings.forEach(booking => {
       worksheet.addRow({
         appart: booking.apartments?.name || "Inconnu",
         client: booking.customer_name,
