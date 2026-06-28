@@ -44,6 +44,8 @@ const initScheduledJobs = () => {
         end_date: booking.end_date,
         total_price: booking.total_price,
         deposit_amount: booking.total_price / 2,
+        adults_count: booking.adults_count || 0, // ✅ Ajoute ça
+
       }
     );
 

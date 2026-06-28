@@ -466,7 +466,8 @@ exports.sendDepositReminderEmail = async (clientEmail, clientName, details) => {
 
   const startStr = new Date(start_date + 'T12:00:00').toLocaleDateString('fr-FR');
   const endStr = new Date(end_date + 'T12:00:00').toLocaleDateString('fr-FR');
-
+  const taxeSejour = (adults_count || 0) * 6;
+  const solde = Math.round(total_price / 100 / 2) + taxeSejour;
   const { data: result, error } = await resend.emails.send({
     from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
     to: clientEmail,
@@ -478,7 +479,7 @@ exports.sendDepositReminderEmail = async (clientEmail, clientName, details) => {
 
         <p>Je reviens vers vous dans le cadre de votre réservation pour l'appartement <strong>${apartment_name}</strong> du <strong>${startStr}</strong> au <strong>${endStr}</strong>.</p>
 
-        <p>Si vous ne l'avez pas déjà fait, je vous remercie de régler le solde de la location par virement au plus tard 30 jours avant le début du séjour.</p>
+        <p>Si vous ne l'avez pas déjà fait, je vous remercie de régler le solde de la location, soit <strong>${solde} €</strong>, par virement au plus tard 30 jours avant le début du séjour.</p>
 
         <p>Vous allez recevoir également un mail de <strong>Swikly</strong> avec un lien sécurisé pour valider la caution (aucun prélèvement ne sera effectué).</p>
 
