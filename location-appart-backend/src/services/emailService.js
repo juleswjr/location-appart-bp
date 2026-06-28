@@ -287,6 +287,7 @@ exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
     const { data: result, error } = await resend.emails.send({
   from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
   to: email,
+  cc: process.env.EMAIL_PROPRIO,
   subject: `✅ Réservation Confirmée - ${details.apartment_name}`,
   html: `
     <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; line-height: 1.6;">
@@ -296,7 +297,7 @@ exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
 
       <p>Votre réservation est validée.</p>
 
-      <p>Pour toutes les questions pratiques, concernant l’organisation de votre séjour, vous pouvez contacter directement à le service de conciergerie au <strong>0612575135</strong>.</p>
+      <p>Pour toutes les questions pratiques, concernant l’organisation de votre séjour, vous pouvez contacter directement le service de conciergerie au <strong>0612575135</strong>.</p>
 
       <p>Bien cordialement,<br>
       <strong>Pierre Wejroch</strong></p>
@@ -469,6 +470,7 @@ exports.sendDepositReminderEmail = async (clientEmail, clientName, details) => {
   const { data: result, error } = await resend.emails.send({
     from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
     to: clientEmail,
+    cc: process.env.EMAIL_PROPRIO,
     subject: `💰 Rappel solde & caution – ${apartment_name}`,
     html: `
       <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; line-height: 1.6;">

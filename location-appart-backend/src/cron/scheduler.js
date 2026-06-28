@@ -34,44 +34,30 @@ const initScheduledJobs = () => {
       console.log(`💰 ${bookings.length} rappel(s) d'acompte à envoyer.`);
 
       for (const booking of bookings) {
-        try {
-          // Envoi au client ET au proprio en parallèle
-          await Promise.all([
-            emailService.sendDepositReminderEmail(
-              booking.customer_email,
-              booking.customer_name,
-              {
-                apartment_name: booking.apartments.name,
-                start_date: booking.start_date,
-                end_date: booking.end_date,
-                total_price: booking.total_price,
-                deposit_amount: booking.total_price / 2,
-              }
-            ),
-            emailService.sendDepositReminderEmail(
-              process.env.EMAIL_PROPRIO, // ✅ Même mail, envoyé au proprio aussi
-              `Rappel proprio – Nom du locataire : ${booking.customer_name}`, // Nom affiché dans le mail
-              {
-                apartment_name: booking.apartments.name,
-                start_date: booking.start_date,
-                end_date: booking.end_date,
-                total_price: booking.total_price,
-                deposit_amount: booking.total_price / 2,
-              }
-            ),
-          ]);
-
-          await supabase
-            .from('bookings')
-            .update({ sent_deposit_email: true })
-            .eq('id', booking.id);
-
-          console.log(`   ✅ Rappel acompte envoyé à ${booking.customer_name}`);
-
-        } catch (err) {
-          console.error(`   ❌ Erreur pour ${booking.customer_name}:`, err.message);
-        }
+  try {
+    await emailService.sendDepositReminderEmail(
+      booking.customer_email,
+      booking.customer_name,
+      {
+        apartment_name: booking.apartments.name,
+        start_date: booking.start_date,
+        end_date: booking.end_date,
+        total_price: booking.total_price,
+        deposit_amount: booking.total_price / 2,
       }
+    );
+
+    await supabase
+      .from('bookings')
+      .update({ sent_deposit_email: true })
+      .eq('id', booking.id);
+
+    console.log(`   ✅ Rappel acompte envoyé à ${booking.customer_name}`);
+
+  } catch (err) {
+    console.error(`   ❌ Erreur pour ${booking.customer_name}:`, err.message);
+  }
+}
 
     } catch (error) {
       console.error("❌ Erreur CRITIQUE Cron :", error);
