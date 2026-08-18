@@ -290,7 +290,15 @@ export default async function ApartmentPage({ params }) {
           
         </div>
       </div>
-      
+      <footer className="bg-gray-100 text-center py-6 text-sm text-gray-500 mt-12">
+        <p>© 2026 MyBellePlagne - Location de particulier à particulier</p>
+        <div className="mt-2">
+          {/* C'est ce lien qui renvoie vers la page */}
+          <a href="/mentions-legales" className="hover:underline">
+            Mentions Légales & Confidentialité
+          </a>
+        </div>
+      </footer>
     </main>
   );
 }
