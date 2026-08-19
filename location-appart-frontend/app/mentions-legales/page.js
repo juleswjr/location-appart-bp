@@ -6,7 +6,7 @@ export default function MentionsLegales() {
       <section className="mb-8">
         <h2 className="text-xl font-semibold mb-4">1. Éditeur du site</h2>
         <p><strong>Propriétaire :</strong> Pierre Wejroch</p>
-        <p><strong>Adresse :</strong> Chemin du Bois de Laud, 26200 Montélimar</p>
+        <p><strong>Adresse :</strong> Clinique Pasteur, 07500 Guilherand-Granges</p>
         <p><strong>Contact :</strong> mybelleplagne@gmail.com</p>
         <p><em>Statut : Particulier </em></p>
       </section>
