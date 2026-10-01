@@ -421,15 +421,19 @@ exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetail
 };
 
 // 4. Mail de contact
-exports.sendContactMessage = async (name, email, message) => {
+// apartmentName est optionnel : absent quand le message vient de la page d'accueil
+exports.sendContactMessage = async (name, email, message, apartmentName) => {
   const { data: result, error } = await resend.emails.send({
     from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
     to: process.env.EMAIL_PROPRIO,
     replyTo: email,
-    subject: `📩 Nouveau message de ${name}`,
+    subject: apartmentName
+      ? `📩 [${apartmentName}] Nouveau message de ${name}`
+      : `📩 Nouveau message de ${name}`,
     html: `
       <div style="font-family: Arial, sans-serif;">
         <h3>Nouveau message depuis le site</h3>
+        ${apartmentName ? `<p><strong>Appartement :</strong> ${apartmentName}</p>` : ''}
         <p><strong>Nom :</strong> ${name}</p>
         <p><strong>Email :</strong> ${email}</p>
         <hr>
