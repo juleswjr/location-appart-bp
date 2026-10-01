@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-export default function ContactSection() {
+export default function ContactSection({ apartmentName }) {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState(null); // 'success', 'error', 'loading'
 
@@ -13,7 +13,7 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const res = await fetch(`${apiUrl}/api/contact`, { // 👈 Utilisation de l'URL dynamique
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, apartmentName }),
       });
 
       if (res.ok) {

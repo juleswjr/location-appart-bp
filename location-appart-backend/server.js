@@ -63,14 +63,14 @@ app.get('/api/accounting/export', accountingController.downloadAccountingExcel);
 
 // --- Route pour le Formulaire de Contact ---
 app.post('/api/contact', async (req, res) => {
-  const { name, email, message } = req.body;
+  const { name, email, message, apartmentName } = req.body;
   
   if (!name || !email || !message) {
     return res.status(400).json({ message: "Tous les champs sont requis." });
   }
 
   try {
-    await emailService.sendContactMessage(name, email, message);
+    await emailService.sendContactMessage(name, email, message, apartmentName);
     res.status(200).json({ message: "Message envoyé avec succès !" });
   } catch (error) {
     console.error("Erreur contact:", error);

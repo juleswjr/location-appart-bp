@@ -121,18 +121,21 @@ exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetail
 };
 
 // 4. Mail pour le Formulaire de CONTACT (Page d'accueil)
-exports.sendContactMessage = async (name, email, message) => {
+// apartmentName est optionnel : absent quand le message vient de la page d'accueil
+exports.sendContactMessage = async (name, email, message, apartmentName) => {
   const mailOptions = {
     from: `"Bot Appart BP" <${process.env.EMAIL_USER}>`,
     to: process.env.EMAIL_PROPRIO, // Ça arrive chez toi
     replyTo: email, // Pour répondre directement au client en cliquant sur "Répondre"
-    subject: `📩 Nouveau message de ${name}`,
+    subject: apartmentName
+      ? `📩 [${apartmentName}] Nouveau message de ${name}`
+      : `📩 Nouveau message de ${name}`,
     text: `
       Message reçu depuis le site de location d'appart :
-      
+
       Nom : ${name}
-      Email : ${email}
-      
+      Email : ${email}${apartmentName ? `\n      Appartement : ${apartmentName}` : ''}
+
       Message :
       ${message}
     `

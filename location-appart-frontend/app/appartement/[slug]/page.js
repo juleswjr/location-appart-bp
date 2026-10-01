@@ -211,7 +211,7 @@ export default async function ApartmentPage({ params }) {
               </div>
               {/* 6. CONTACT (Ajout de l'ID) */}
             <div id="contact" className="scroll-mt-20">
-              <ContactSection />
+              <ContactSection apartmentName={apartment.name} />
             </div>
             </section>
             
