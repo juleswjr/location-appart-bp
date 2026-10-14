@@ -1,204 +1,4 @@
 // src/services/emailService.js
-/*
-const nodemailer = require('nodemailer');
-const { format } = require("date-fns");
-const { fr } = require("date-fns/locale");
-
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-
-
-transporter.verify(function (error, success) {
-  if (error) {
-    console.error('❌ ERREUR CRITIQUE SMTP :', error);
-  } else {
-    console.log('✅ Serveur SMTP prêt à envoyer des emails !');
-  }
-});
-// 1. Mail pour prévenir le PROPRIO (Toi)
-exports.sendNewBookingNotification = async (data) => {
-
-  console.log("📤 Envoi mail PROPRIO...");
-  try{
-  const mailOptions = await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: process.env.EMAIL_PROPRIO, // Tu te l'envoies à toi-même
-    subject: `🔔 Nouvelle demande : ${data.apartment_name}`,
-    text: `
-      Nouvelle demande reçue !
-      
-      Appartement : ${data.apartment_name}
-      Client : ${data.customer_name}
-      Dates : du ${new Date(data.start_date).toLocaleDateString('fr-FR')} au ${new Date(data.end_date).toLocaleDateString('fr-FR')}
-      
-      Prix total estimé : ${data.total_price/100} €
-      Option Parking : ${data.has_parking}
-
-      Va sur ton dashboard pour valider ou refuser.
-    `});
-    console.log("✅ Mail PROPRIO envoyé:", mailOptions.messageId);
-    return mailOption;
-  }
-  catch (err) {
-    console.error("❌ Erreur envoi mail PROPRIO:", err);
-    throw err;
-  }
-  //return transporter.sendMail(mailOptions);
-};
-
-// 2. Mail pour prévenir le CLIENT (Confirmation de reservation)
-
-exports.sendBookingConfirmation = async (email, name, details, contractUrl) => {
-  
-  const mailOptions = {
-    from: `"Loc'Montagne" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: `✅ Réservation Confirmée - ${details.apartment_name}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #333;">
-        <h2 style="color: #166534;">Félicitations ${name} !</h2>
-        <p>Nous avons le plaisir de vous confirmer votre réservation pour <strong>${details.apartment_name}</strong>.</p>
-        <p><strong>Dates :</strong> Du ${details.start_date} au ${details.end_date}</p>
-        <br>
-        <p>📄 <strong>Vous trouverez votre contrat de location en pièce jointe de cet email.</strong></p>
-        <p>Merci de votre confiance et à très bientôt !</p>
-      </div>
-    `,
-    // Pièce jointe : Le PDF via l'URL Supabase
-    attachments: [
-      {
-        filename: `Contrat_Location_${details.apartment_name.replace(/\s/g, '_')}.pdf`,
-        path: contractUrl
-      }
-    ]
-  };
-
-  return transporter.sendMail(mailOptions);
-};
-
-
-
-// 3. Mail pour prévenir le CLIENT (Confirmation de demande)
-exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetails, pdfUrl) => {
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: clientEmail,
-    subject: `⏳ Demande reçue - ${bookingDetails.apartment_name}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: #2563EB;">Bonjour ${clientName},</h1>
-        
-        <p>Nous avons bien reçu votre demande de réservation pour l'appartement <strong>${bookingDetails.apartment_name}</strong>.</p>
-        
-        <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-          <h3 style="margin-top: 0;">Récapitulatif de la demande :</h3>
-          <p><strong>📅 Du :</strong> ${bookingDetails.start_date}</p>
-          <p><strong>📅 Au :</strong> ${bookingDetails.end_date}</p>
-          <p><strong>💰 Prix total :</strong> ${bookingDetails.total_price/100} €</p>
-        </div>
-
-        <p>Le propriétaire va étudier votre demande dans les plus brefs délais.</p>
-        
-        <p style="text-align: center; margin: 30px 0;">
-          <a href="${pdfUrl}" style="background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">
-            Télécharger votre récapitulatif (PDF)
-          </a>
-        </p>
-
-        <p>Vous recevrez un nouvel email dès que la réservation sera confirmée.</p>
-        <br>
-        <p>À très vite !</p>
-      </div>
-    `
-  };
-  return transporter.sendMail(mailOptions);
-};
-
-// 5. Mail de REFUS (Quand tu refuses manuellement ou automatiquement)
-exports.sendBookingRejectedEmail = async (clientEmail, clientName, apartmentName) => {
-  const mailOptions = {
-    from: `"Bot Location" <${process.env.EMAIL_USER}>`,
-    to: clientEmail,
-    subject: `❌ Mise à jour de votre demande - ${apartmentName}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #333;">
-        <h2>Bonjour ${clientName},</h2>
-        <p>Nous vous informons que votre demande de réservation pour l'appartement <strong>${apartmentName}</strong> n'a malheureusement pas pu être retenue.</p>
-        <p>Cela est souvent dû à l'indisponibilité des dates choisies ou à la validation d'un autre dossier sur la même période.</p>
-        <br>
-        <p>Nous espérons avoir l'occasion de vous accueillir une prochaine fois !</p>
-        <p>Cordialement,<br>L'équipe Location</p>
-      </div>
-    `
-  };
-  return transporter.sendMail(mailOptions);
-};
-
-exports.sendArrivedEmail = async (clientEmail, clientName, apartmentName,custom_arrival_message) => {
-  const mailOptions = {
-    from: `"Bot Location" <${process.env.EMAIL_USER}>`,
-    to: clientEmail,
-    subject: `Rappel pour votre arrivé au - ${apartmentName}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #333;">
-        <p>${custom_arrival_message},</p>
-      </div>
-    `
-  };
-  return transporter.sendMail(mailOptions);
-};
-
-exports.sendDepartureEmail = async (clientEmail, apartmentName, messageHtml) => {
-  console.log(`📤 Envoi mail DÉPART à ${clientEmail}...`);
-  
-  const mailOptions = {
-    from: `"Loc'Montagne" <${process.env.EMAIL_USER}>`,
-    to: clientEmail,
-    subject: `👋 Départ demain - ${apartmentName}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #333;">
-        ${messageHtml}
-        <br>
-        <p style="font-size: 12px; color: gray; margin-top: 20px;">Ceci est un email automatique.</p>
-      </div>
-    `
-  };
-  
-  return transporter.sendMail(mailOptions);
-};
-exports.sendParkingEmail = async (clientEmail, apartmentName, messageHtml) => {
-  console.log(`📤 Envoi mail parking à ${clientEmail}...`);
-  
-  const mailOptions = {
-    from: `"Loc'Montagne" <${process.env.EMAIL_USER}>`,
-    to: clientEmail,
-    subject: `🅿️ Votre accès Parking - ${apartmentName}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #333;">
-        ${messageHtml}
-        <br>
-        <p style="font-size: 12px; color: gray; margin-top: 20px;">Ceci est un email automatique.</p>
-      </div>
-    `
-  };
-  
-  return transporter.sendMail(mailOptions);
-};
-<p style="text-align: center; margin: 30px 0;">
-            <a href="${pdfUrl}" style="background: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              📄 Télécharger le récapitulatif
-            </a>
-          </p>
-*/
-
-
-// src/services/emailService.js
 
 
 
@@ -213,6 +13,15 @@ console.log("   Email From:", process.env.EMAIL_FROM || "noreply@mybelleplagne.f
 console.log("========================================\n");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Empêche le HTML saisi par un visiteur d'être interprété dans le mail
+const escapeHtml = (str = '') =>
+  String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 // 1. Mail au PROPRIO
 exports.sendNewBookingNotification = async (data) => {
@@ -229,7 +38,7 @@ exports.sendNewBookingNotification = async (data) => {
           <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h3 style="margin-top: 0;">Récapitulatif :</h3>
               <p><strong>Appartement :</strong> ${data.apartment_name}</p>
-              <p><strong>Client :</strong> ${data.customer_name}</p>
+              <p><strong>Client :</strong> ${escapeHtml(data.customer_name)}</p>
               <p><strong>Dates :</strong> du ${data.start_date} au ${data.end_date}</p>
               <p><strong>Prix total :</strong> ${data.total_price/100} €</p>
               
@@ -319,7 +128,7 @@ exports.sendContractToClient = async (clientEmail, clientName, details, contract
       ],
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; line-height: 1.6;">
-          <p>Bonjour ${clientName},</p>
+          <p>Bonjour ${escapeHtml(clientName)},</p>
 
           <p>Votre demande de réservation pour l'appartement <strong>${details.apartment_name}</strong> du <strong>${details.start_date}</strong> au <strong>${details.end_date}</strong> a bien été prise en compte.</p>
           <p>L'appartement est désormais bloqué à votre nom. Nous vous remercions de bien vouloir effectuer les formalités de réservation dans un délai de 3 jours afin de confirmer votre séjour.</p>
@@ -366,7 +175,7 @@ exports.sendConfirmationAskEmail = async (clientEmail, clientName, bookingDetail
       subject: `⏳ Demande reçue - ${bookingDetails.apartment_name}`,
       html: `
         <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px;">
-          <h1 style="color: #2563EB;">Bonjour ${clientName},</h1>
+          <h1 style="color: #2563EB;">Bonjour ${escapeHtml(clientName)},</h1>
           <p>Nous avons bien reçu votre demande pour <strong>${bookingDetails.apartment_name}</strong>.</p>
           
           <div style="background: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
@@ -410,14 +219,12 @@ exports.sendContactMessage = async (name, email, message, apartmentName) => {
     html: `
       <div style="font-family: Arial, sans-serif;">
         <h3>Nouveau message depuis le site</h3>
-        ${apartmentName ? `<p><strong>Appartement :</strong> ${apartmentName}</p>` : ''}
-        <p><strong>Nom :</strong> ${name}</p>
-        <p><strong>Email :</strong> ${email}</p>
+        ${apartmentName ? `<p><strong>Appartement :</strong> ${escapeHtml(apartmentName)}</p>` : ''}
+        <p><strong>Nom :</strong> ${escapeHtml(name)}</p>
+        <p><strong>Email :</strong> ${escapeHtml(email)}</p>
         <hr>
         <p><strong>Message :</strong></p>
-        <p style="background: #f9f9f9; padding: 15px; border-left: 3px solid #2563EB;">
-          ${message}
-        </p>
+        <p style="background: #f9f9f9; padding: 15px; border-left: 3px solid #2563EB; white-space: pre-wrap;">${escapeHtml(message)}</p>
       </div>
     `
   });
@@ -434,7 +241,7 @@ exports.sendBookingRejectedEmail = async (clientEmail, clientName, apartmentName
     subject: `❌ Mise à jour - ${apartmentName}`,
     html: `
       <div style="font-family: Arial, sans-serif; color: #333;">
-        <h2>Bonjour ${clientName},</h2>
+        <h2>Bonjour ${escapeHtml(clientName)},</h2>
         <p>Votre demande pour <strong>${apartmentName}</strong> n'a pas pu être retenue.</p>
         <p>Nous espérons vous accueillir une prochaine fois !</p>
       </div>
@@ -459,7 +266,7 @@ exports.sendDepositReminderEmail = async (clientEmail, clientName, details) => {
     subject: `💰 Rappel solde & caution – ${apartment_name}`,
     html: `
       <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; line-height: 1.6;">
-        <p>Bonjour ${clientName},</p>
+        <p>Bonjour ${escapeHtml(clientName)},</p>
 
         <p>Je reviens vers vous dans le cadre de votre réservation pour l'appartement <strong>${apartment_name}</strong> du <strong>${startStr}</strong> au <strong>${endStr}</strong>.</p>
 
@@ -478,110 +285,3 @@ exports.sendDepositReminderEmail = async (clientEmail, clientName, details) => {
   if (error) throw error;
   return result;
 };
-/*
-// 6. Mail d'arrivée
-exports.sendArrivedEmail = async (clientEmail, clientName, apartmentName, custom_arrival_message) => {
-  const { data: result, error } = await resend.emails.send({
-    from: `Location MyBellePlagne <${process.env.EMAIL_FROM}>`,
-    to: clientEmail,
-    subject: `Rappel accompte - ${apartmentName}`,
-    html: `<div style="font-family: Arial, sans-serif;">${custom_arrival_message}</div>`
-  });
-
-  if (error) throw error;
-  return result;
-};
-
-exports.sendDepartureEmail = async (clientEmail, apartmentName, custom_departure_message) =>{
-    const { data: result, error } = await resend.emails.send({
-    from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
-    to: clientEmail,
-    subject: `Informations pour votre départ - ${apartmentName}`,
-    html: `<div style="font-family: Arial, sans-serif;">${custom_departure_message}</div>`
-  });
-
-  if (error) throw error;
-  return result;
-};
-
-exports.sendDepartureEmail = async (clientEmail, apartmentName, messageHtml) => {
-  console.log(`📤 Envoi mail DÉPART à ${clientEmail}...`);
-  
-  const mailOptions = {
-    from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
-    to: clientEmail,
-    subject: `👋 Départ demain - ${apartmentName}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #333;">
-        ${messageHtml}
-        <br>
-        <p style="font-size: 12px; color: gray; margin-top: 20px;">Ceci est un email automatique.</p>
-      </div>
-    `
-  };
-  
-  return transporter.sendMail(mailOptions);
-};
-exports.sendParkingEmail = async (clientEmail, apartmentName, messageHtml) => {
-  console.log(`📤 Envoi mail parking à ${clientEmail}...`);
-  
-  const mailOptions = {
-    from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
-    to: clientEmail,
-    subject: `🅿️ Votre accès Parking - ${apartmentName}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; color: #333;">
-        ${messageHtml}
-        <br>
-        <p style="font-size: 12px; color: gray; margin-top: 20px;">Ceci est un email automatique.</p>
-      </div>
-    `
-  };
-  
-  return transporter.sendMail(mailOptions);
-};
-
-
-exports.sendContractToOwner = async (clientEmail, clientName, details, contractUrl) => {
-
-  console.log("\n📧 ========== CONTRAT PROPRIO ==========");
-
-  // Télécharger le PDF depuis Supabase pour l'attacher
-  const pdfResponse = await fetch(contractUrl);
-  const pdfBuffer = Buffer.from(await pdfResponse.arrayBuffer());
-
-  const { data: result, error } = await resend.emails.send({
-        from: `Location Belle Plagne <${process.env.EMAIL_FROM}>`,
-        to: process.env.EMAIL_PROPRIO,
-        subject: `📄 Contrat envoyé – ${details.apartment_name} – ${clientName}`,
-        attachments: [{ filename: `contrat-${clientName.replace(/\s+/g, '-')}.pdf`, content: pdfBuffer }],
-        html: `
-          <div style="font-family: Arial, sans-serif; color: #333;">
-            <p>Le contrat a été envoyé au client <strong>${clientName}</strong> pour la réservation suivante :</p>
-            <ul>
-              <li><strong>Appartement :</strong> ${details.apartment_name}</li>
-              <li><strong>Du :</strong> ${details.start_date}</li>
-              <li><strong>Au :</strong> ${details.end_date}</li>
-            </ul>
-          </div>
-        `
-      });
-
-  if (error) {
-    console.error("❌ Erreur Resend contrat proprio:", error);
-    throw error;
-  }
-
-  console.log("✅ Contrat envoyé au proprio via Resend");
-  console.log("========================================\n");
-  return result;
-};
-*/
-/*
-
-```
-
-5. **Variables sur Render :**
-```
-RESEND_API_KEY=re_votre_clé_api_resend
-EMAIL_PROPRIO=votre-email@gmail.com */
