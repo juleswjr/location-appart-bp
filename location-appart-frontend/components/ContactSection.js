@@ -1,9 +1,16 @@
 "use client";
 import { useState } from "react";
 
-export default function ContactSection({ apartmentName }) {
+const GENERAL_QUESTION = "general";
+
+// apartmentName : fourni sur la page d'un appartement
+// apartments : fourni sur la page d'accueil pour afficher le sélecteur d'appartement
+export default function ContactSection({ apartmentName, apartments }) {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
+  const [selectedApartment, setSelectedApartment] = useState("");
   const [status, setStatus] = useState(null); // 'success', 'error', 'loading'
+
+  const showSelector = !apartmentName && Array.isArray(apartments);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -13,12 +20,18 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
       const res = await fetch(`${apiUrl}/api/contact`, { // 👈 Utilisation de l'URL dynamique
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, apartmentName }),
+        body: JSON.stringify({
+          ...formData,
+          // "Question générale" => pas d'appartement dans le mail
+          apartmentName: apartmentName
+            || (selectedApartment !== GENERAL_QUESTION ? selectedApartment : undefined),
+        }),
       });
 
       if (res.ok) {
         setStatus("success");
         setFormData({ name: "", email: "", message: "" });
+        setSelectedApartment("");
       } else {
         setStatus("error");
       }
@@ -61,6 +74,23 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
                 />
               </div>
             </div>
+            {showSelector && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Appartement concerné</label>
+                <select
+                  required
+                  className="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                  value={selectedApartment}
+                  onChange={(e) => setSelectedApartment(e.target.value)}
+                >
+                  <option value="" disabled>-- Choisir --</option>
+                  <option value={GENERAL_QUESTION}>Question générale</option>
+                  {apartments.map((apt) => (
+                    <option key={apt.id} value={apt.name}>{apt.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Votre Message</label>
               <textarea

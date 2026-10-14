@@ -123,7 +123,7 @@ export default async function Home() {
 
       {/* 6. CONTACT (Ajout de l'ID) */}
       <div id="contact" className="scroll-mt-20">
-        <ContactSection />
+        <ContactSection apartments={apartments} />
       </div>
 
       <footer className="bg-gray-100 text-center py-6 text-sm text-gray-500 mt-12">
