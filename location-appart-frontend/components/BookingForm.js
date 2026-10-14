@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.min.css";
 // Ajout de 'getDay' pour vérifier le jour de la semaine (0-6)
-import { addDays, differenceInCalendarDays, format, getDay } from "date-fns"; 
+import { addDays, differenceInCalendarDays, format, getDay, parseISO } from "date-fns";
 import fr from "date-fns/locale/fr";
 import { createClient } from "@supabase/supabase-js";
 
@@ -38,6 +38,11 @@ export default function BookingForm({ apartment }) {
 });
 
   const [fullyBookedDates, setFullyBookedDates] = useState([]);
+  // Jours interdits comme arrivée (début + milieu d'une résa) et comme départ (milieu + fin d'une résa)
+  const [blockedStartDates, setBlockedStartDates] = useState(new Set());
+  const [blockedEndDates, setBlockedEndDates] = useState(new Set());
+  // Dates de début des résas confirmées (triées) pour limiter la date de départ
+  const [bookingStartDates, setBookingStartDates] = useState([]);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
 
@@ -73,21 +78,34 @@ export default function BookingForm({ apartment }) {
         
         if (dataBooking && dataBooking.bookings) {
           let middleDays = [];
+          const blockedStarts = new Set();
+          const blockedEnds = new Set();
+          const starts = [];
           const confirmedBookings = dataBooking.bookings.filter(b => b.status === 'confirmed');
-          
+
           confirmedBookings.forEach(booking => {
-            const start = new Date(booking.start_date);
-            const end = new Date(booking.end_date);
-            
-            // On bloque uniquement les jours ENTRE le début et la fin
-            // Cela permet le "Départ le matin / Arrivée l'après-midi" le même jour
-            let current = addDays(start, 1);
-            while (current < end) {
-              middleDays.push(new Date(current));
+            // parseISO sur "YYYY-MM-DD" donne minuit en heure locale (évite les décalages de fuseau)
+            const start = parseISO(booking.start_date.substring(0, 10));
+            const end = parseISO(booking.end_date.substring(0, 10));
+            starts.push(start);
+
+            // "Départ le matin / Arrivée l'après-midi" le même jour :
+            // - le jour de début ne peut plus être une arrivée, mais peut être un départ
+            // - le jour de fin ne peut plus être un départ, mais peut être une arrivée
+            // - les jours du milieu ne sont ni arrivée ni départ
+            let current = start;
+            while (current <= end) {
+              const key = format(current, 'yyyy-MM-dd');
+              if (current < end) blockedStarts.add(key);
+              if (current > start) blockedEnds.add(key);
+              if (current > start && current < end) middleDays.push(new Date(current));
               current = addDays(current, 1);
             }
           });
           setFullyBookedDates(middleDays);
+          setBlockedStartDates(blockedStarts);
+          setBlockedEndDates(blockedEnds);
+          setBookingStartDates(starts.sort((a, b) => a - b));
         }
 
       } catch (err) {
@@ -108,16 +126,24 @@ export default function BookingForm({ apartment }) {
     const dateKey = format(date, 'yyyy-MM-dd');
     if (!validSeasonDates.has(dateKey)) return false;
 
+    // C. Pas déjà le début ou le milieu d'une réservation confirmée
+    if (blockedStartDates.has(dateKey)) return false;
+
     return true;
   };
 
-  // Pour la date de FIN, on vérifie juste que c'est le bon jour de rotation
+  // Pour la date de FIN, on vérifie le jour de rotation et qu'elle n'est pas le milieu/la fin d'une résa
   // (Pas besoin qu'elle soit une date de début de saison, c'est une date de fin)
   const isEndDateSelectable = (date) => {
     if (getDay(date) !== CHANGE_DAY) return false;
-    // On pourrait ajouter d'autres logiques ici si besoin
+    if (blockedEndDates.has(format(date, 'yyyy-MM-dd'))) return false;
     return true;
   };
+
+  // Le départ ne peut pas dépasser le début de la prochaine réservation (sinon on l'englobe)
+  const maxEndDate = startDate
+    ? bookingStartDates.find(d => d > startDate) || null
+    : null;
 
 
   // --- 3. CALCULATRICE ---
@@ -250,8 +276,7 @@ export default function BookingForm({ apartment }) {
             startDate={startDate}
             endDate={endDate}
             // 👇 C'EST ICI LA MAGIE
-            filterDate={isDateSelectable} 
-            excludeDates={fullyBookedDates} 
+            filterDate={isDateSelectable}
             dayClassName={getDayClass}
             locale={fr}
             dateFormat="dd/MM/yyyy"
@@ -269,9 +294,9 @@ export default function BookingForm({ apartment }) {
             startDate={startDate}
             endDate={endDate}
             minDate={startDate ? addDays(startDate, 7) : null} // Minimum 1 semaine
-            // 👇 ICI ON FILTRE JUSTE LE JOUR DE SEMAINE
+            maxDate={maxEndDate} // Pas au-delà du début de la prochaine résa
+            // 👇 Jour de rotation + pas le milieu/la fin d'une résa
             filterDate={isEndDateSelectable}
-            excludeDates={fullyBookedDates}
             dayClassName={getDayClass}
             locale={fr}
             dateFormat="dd/MM/yyyy"
